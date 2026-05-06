@@ -312,11 +312,24 @@ extension Manifest.Resolver {
     private static func fetchHTTP(
         _ uri: URI
     ) throws(Self.Error) -> Swift.String {
-        let tempPath = "/tmp/swift-manifests-fetch-\(sanitize(uri.value)).tmp"
+        let tempPath: File.Path
+        do {
+            tempPath = try File.Path.Temporary.deterministic(
+                prefix: "swift-manifests-fetch-",
+                key: uri.value,
+                suffix: ".tmp"
+            )
+        } catch {
+            throw .parentFetchFailed(
+                url: uri,
+                exitCode: -1,
+                stderr: "temp path: \(error)"
+            )
+        }
 
         let configuration = Process.Spawn.Configuration(
             executable: "/usr/bin/curl",
-            arguments: ["-fsSL", uri.value, "-o", tempPath]
+            arguments: ["-fsSL", uri.value, "-o", tempPath.description]
         )
 
         let status: Process.Status
@@ -346,8 +359,7 @@ extension Manifest.Resolver {
 
         let content: Swift.String
         do {
-            let filePath = try File.Path(tempPath)
-            let bytes: [Swift.UInt8] = try File(filePath).read.full {
+            let bytes: [Swift.UInt8] = try File(tempPath).read.full {
                 (span: Span<Swift.UInt8>) -> [Swift.UInt8] in
                 var array: [Swift.UInt8] = []
                 array.reserveCapacity(span.count)
@@ -367,33 +379,11 @@ extension Manifest.Resolver {
         _ = try? Process.Spawn.run(
             Process.Spawn.Configuration(
                 executable: "/bin/rm",
-                arguments: ["-f", tempPath]
+                arguments: ["-f", tempPath.description]
             )
         )
 
         return content
-    }
-
-    /// Filename-safe form of an arbitrary string (alphanumerics +
-    /// `_-.` retained, everything else mapped to `_`). Deterministic;
-    /// same input → same output within and across processes.
-    ///
-    /// TODO (Phase 2.5b ecosystem-promotion): replace with
-    /// `Path.sanitized(from:)` from `swift-path-primitives` once that
-    /// ecosystem API lands.
-    @inline(__always)
-    private static func sanitize(_ string: Swift.String) -> Swift.String {
-        var sanitized = ""
-        for character in string {
-            if character.isLetter || character.isNumber
-                || character == "_" || character == "-" || character == "."
-            {
-                sanitized.append(character)
-            } else {
-                sanitized.append("_")
-            }
-        }
-        return sanitized
     }
 }
 
@@ -415,19 +405,33 @@ extension Manifest.Resolver {
         manifestFilename: Swift.String,
         dependencies: [Manifest.Dependency]
     ) throws(Self.Error) -> M {
-        let tempDir = "/tmp/swift-manifests-parent-eval-\(sanitize(uri.value))"
-        let tempFilePath = tempDir + "/" + manifestFilename
+        let tempDirectory: File.Path
+        do {
+            tempDirectory = try File.Path.Temporary.deterministic(
+                prefix: "swift-manifests-parent-eval-",
+                key: uri.value,
+                suffix: ""
+            )
+        } catch {
+            throw .parentFetchFailed(
+                url: uri,
+                exitCode: 0,
+                stderr: "temp dir: \(error)"
+            )
+        }
+        let tempDirectoryString = tempDirectory.description
+        let tempFilePathString = tempDirectoryString + "/" + manifestFilename
 
         // Best-effort mkdir -p; failure surfaces as the subsequent write failure.
         _ = try? Process.Spawn.run(
             Process.Spawn.Configuration(
                 executable: "/bin/mkdir",
-                arguments: ["-p", tempDir]
+                arguments: ["-p", tempDirectoryString]
             )
         )
 
         do {
-            let filePath = try File.Path(tempFilePath)
+            let filePath = try File.Path(tempFilePathString)
             try File(filePath).write.atomic(content)
         } catch {
             throw .parentFetchFailed(
@@ -440,7 +444,7 @@ extension Manifest.Resolver {
         do {
             return try Manifest.load(
                 M.self,
-                from: tempDir,
+                from: tempDirectoryString,
                 named: manifestFilename,
                 valueName: "manifest",
                 dependencies: dependencies
