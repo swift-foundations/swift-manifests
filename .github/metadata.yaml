@@ -1,0 +1,8 @@
+# .github/metadata.yaml
+description: "Generic Swift-DSL manifest loader (compile, run, capture typed value as JSON)."
+topics:
+  - foundations
+  - manifest
+  - dsl
+  - swift-package-manager
+homepage: "https://swift-institute.org"
