@@ -2,9 +2,9 @@
 
 // ===----------------------------------------------------------------------===//
 //
-// This source file is part of the swift-manifest open source project
+// This source file is part of the swift-manifests open source project
 //
-// Copyright (c) 2026 Coen ten Thije Boonkkamp and the swift-manifest project authors
+// Copyright (c) 2026 Coen ten Thije Boonkkamp and the swift-manifests project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE for license information
@@ -14,7 +14,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "swift-manifest",
+    name: "swift-manifests",
     platforms: [
         .macOS(.v26),
         .iOS(.v26),
@@ -23,33 +23,58 @@ let package = Package(
         .visionOS(.v26)
     ],
     products: [
-        .library(name: "Manifest", targets: ["Manifest"])
+        .library(name: "Manifest Loader", targets: ["Manifest Loader"]),
+        .library(name: "Manifest Resolver", targets: ["Manifest Resolver"]),
     ],
     dependencies: [
+        .package(path: "../../swift-primitives/swift-manifest-primitives"),
+        .package(path: "../../swift-standards/swift-uri-standard"),
         .package(path: "../swift-environment"),
         .package(path: "../swift-file-system"),
         .package(path: "../swift-json"),
         .package(path: "../swift-process"),
-        .package(path: "../swift-strings")
+        .package(path: "../swift-strings"),
     ],
     targets: [
+        // MARK: - Manifest Loader
         .target(
-            name: "Manifest",
+            name: "Manifest Loader",
             dependencies: [
+                .product(name: "Manifest Primitives", package: "swift-manifest-primitives"),
                 .product(name: "Environment", package: "swift-environment"),
                 .product(name: "File System", package: "swift-file-system"),
                 .product(name: "JSON", package: "swift-json"),
                 .product(name: "Process", package: "swift-process"),
-                .product(name: "Strings", package: "swift-strings")
-            ],
-            path: "Sources/Manifest"
+                .product(name: "Strings", package: "swift-strings"),
+            ]
+        ),
+
+        // MARK: - Manifest Resolver
+        .target(
+            name: "Manifest Resolver",
+            dependencies: [
+                .product(name: "Manifest Primitives", package: "swift-manifest-primitives"),
+                "Manifest Loader",
+                .product(name: "File System", package: "swift-file-system"),
+                .product(name: "Process", package: "swift-process"),
+                .product(name: "URI Standard", package: "swift-uri-standard"),
+            ]
+        ),
+
+        // MARK: - Tests
+        .testTarget(
+            name: "Manifest Loader Tests",
+            dependencies: [
+                "Manifest Loader",
+            ]
         ),
         .testTarget(
-            name: "Manifest Tests",
+            name: "Manifest Resolver Tests",
             dependencies: [
-                "Manifest"
+                "Manifest Resolver",
+                .product(name: "URI Standard", package: "swift-uri-standard"),
             ]
-        )
+        ),
     ],
     swiftLanguageModes: [.v6]
 )

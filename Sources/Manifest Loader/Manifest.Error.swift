@@ -1,8 +1,8 @@
 // ===----------------------------------------------------------------------===//
 //
-// This source file is part of the swift-manifest open source project
+// This source file is part of the swift-manifests open source project
 //
-// Copyright (c) 2026 Coen ten Thije Boonkkamp and the swift-manifest project authors
+// Copyright (c) 2026 Coen ten Thije Boonkkamp and the swift-manifests project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE for license information
@@ -10,6 +10,7 @@
 // ===----------------------------------------------------------------------===//
 
 public import JSON
+public import Manifest_Primitives
 public import Process
 
 extension Manifest {
