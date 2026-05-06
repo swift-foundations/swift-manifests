@@ -21,7 +21,7 @@ extension Manifest {
     ///
     /// Materializes a temporary eval project at
     /// `\(packageRoot)/.swift-manifest/\(filename)/` containing a
-    /// generated `Package.swift`, a generated driver `main.swift`,
+    /// generated `Package.swift`, a generated driver `Driver.swift`,
     /// and a copy of the consumer's manifest file. Invokes
     /// `swift run --package-path <eval>` via ``Process/Spawn`` and
     /// captures the JSON-serialized typed value from a known output
@@ -116,12 +116,17 @@ extension Manifest {
         )
         try _writeAtomic(packageSwift, to: evalRoot + "/Package.swift")
 
-        // Generate driver main.swift.
-        let mainSwift = _renderDriverMain(
+        // Generate driver Driver.swift.
+        //
+        // The shim uses `@main` on `enum __SwiftManifestDriver`. Swift 6.x
+        // rejects `@main` in a module that contains top-level code; a file
+        // literally named `main.swift` is implicitly top-level by filename.
+        // Writing the shim to `Driver.swift` keeps `@main` valid.
+        let driverSwift = _renderDriverMain(
             valueName: configuration.valueName,
             imports: configuration.dependencies.flatMap(\.imports)
         )
-        try _writeAtomic(mainSwift, to: driverDir + "/main.swift")
+        try _writeAtomic(driverSwift, to: driverDir + "/Driver.swift")
 
         // Copy the consumer's manifest into the driver target.
         let manifestBytes: Swift.String = try _readEntireFile(at: manifestSourcePath)

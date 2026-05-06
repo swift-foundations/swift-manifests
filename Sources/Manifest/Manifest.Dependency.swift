@@ -20,7 +20,7 @@ extension Manifest {
     ///   - a `.product(name:package:)` entry on the driver target's
     ///     `dependencies` list,
     ///   - one `import` statement per name in ``imports`` at the
-    ///     top of the driver shim's `main.swift`.
+    ///     top of the driver shim's `Driver.swift`.
     public struct Dependency: Sendable {
         /// Filesystem path to the package directory.
         ///
