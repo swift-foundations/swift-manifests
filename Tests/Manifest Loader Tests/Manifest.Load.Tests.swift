@@ -54,17 +54,17 @@ extension Manifest.Test.Integration {
             Int.self,
             from: fixtureRoot,
             named: "Lint.swift",
-            valueName: "manifest",
+            binding: "manifest",
             dependencies: [
                 Manifest.Dependency(
                     path: foundationsRoot + "/swift-json",
-                    packageName: "swift-json",
+                    name: "swift-json",
                     product: "JSON",
                     imports: []
                 ),
                 Manifest.Dependency(
                     path: foundationsRoot + "/swift-file-system",
-                    packageName: "swift-file-system",
+                    name: "swift-file-system",
                     product: "File System",
                     imports: []
                 )

@@ -21,7 +21,7 @@ extension Manifest {
     /// declared typed value as `Output`.
     ///
     /// Materializes a temporary eval project at
-    /// `\(packageRoot)/.swift-manifest/\(filename)/` containing a
+    /// `\(root)/.swift-manifest/\(filename)/` containing a
     /// generated `Package.swift`, a generated driver `Driver.swift`,
     /// and a copy of the consumer's manifest file. Invokes
     /// `swift run --package-path <eval>` via ``Process/Spawn`` and
@@ -29,7 +29,7 @@ extension Manifest {
     /// path.
     ///
     /// Manifest contract: the consumer's file MUST declare a
-    /// file-scope `let \(valueName): Output` whose right-hand side
+    /// file-scope `let \(binding): Output` whose right-hand side
     /// is a fully-formed `Output` value.
     ///
     /// - Parameters:
@@ -45,10 +45,10 @@ extension Manifest {
         configuration: Configuration
     ) throws(Manifest.Error) -> Output {
         // 1. Validate inputs (existence + path-conversion fitness).
-        let evalRoot = configuration.packageRoot
+        let evalRoot = configuration.root
             + "/.swift-manifest/" + configuration.filename
         let outputPath = evalRoot + "/.output.json"
-        let manifestSourcePath = configuration.packageRoot + "/" + configuration.filename
+        let manifestSourcePath = configuration.root + "/" + configuration.filename
 
         // 2. Materialize the eval project on disk.
         try _materialize(
@@ -76,18 +76,18 @@ extension Manifest {
     /// Convenience overload aggregating individual parameters.
     public static func load<Output: JSON.Serializable>(
         _ output: Output.Type,
-        from packageRoot: Swift.String,
+        from root: Swift.String,
         named filename: Swift.String,
-        valueName: Swift.String,
+        binding: Swift.String,
         dependencies: [Dependency],
         toolchain: Swift.String? = nil
     ) throws(Manifest.Error) -> Output {
         try load(
             output,
             configuration: Configuration(
-                packageRoot: packageRoot,
+                root: root,
                 filename: filename,
-                valueName: valueName,
+                binding: binding,
                 dependencies: dependencies,
                 toolchain: toolchain
             )
@@ -124,7 +124,7 @@ extension Manifest {
         // literally named `main.swift` is implicitly top-level by filename.
         // Writing the shim to `Driver.swift` keeps `@main` valid.
         let driverSwift = _renderDriverMain(
-            valueName: configuration.valueName,
+            binding: configuration.binding,
             imports: configuration.dependencies.flatMap(\.imports)
         )
         try _writeAtomic(driverSwift, to: driverDir + "/Driver.swift")
@@ -242,7 +242,7 @@ extension Manifest {
 
         for dep in configuration.dependencies {
             lines.append(
-                "                .product(name: \"\(dep.product)\", package: \"\(dep.packageName)\"),"
+                "                .product(name: \"\(dep.product)\", package: \"\(dep.name)\"),"
             )
         }
 
@@ -260,7 +260,7 @@ extension Manifest {
 
     @usableFromInline
     internal static func _renderDriverMain(
-        valueName: Swift.String,
+        binding: Swift.String,
         imports: [Swift.String]
     ) -> Swift.String {
         var lines: [Swift.String] = [
@@ -277,7 +277,7 @@ extension Manifest {
             "enum __SwiftManifestDriver {",
             "    static func main() throws {",
             "        let outputPath = CommandLine.arguments[1]",
-            "        let json = \(valueName).jsonString()",
+            "        let json = \(binding).jsonString()",
             "        let path = try File.Path(outputPath)",
             "        try File(path).write.atomic(json)",
             "    }",

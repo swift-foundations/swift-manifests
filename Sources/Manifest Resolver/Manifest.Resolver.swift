@@ -86,7 +86,7 @@ extension Manifest.Resolver {
                 M.self,
                 from: consumerPackageRoot,
                 named: manifestFilename,
-                valueName: "manifest",
+                binding: "manifest",
                 dependencies: dependencies
             )
         } catch {
@@ -446,7 +446,7 @@ extension Manifest.Resolver {
                 M.self,
                 from: tempDirectoryString,
                 named: manifestFilename,
-                valueName: "manifest",
+                binding: "manifest",
                 dependencies: dependencies
             )
         } catch {
