@@ -26,7 +26,7 @@ internal import Process
 /// via `swift run --package-path <consumerRoot>/Lint Lint <args>`.
 ///
 /// The dispatch path is intentionally additive to the existing
-/// resolver: ``Manifest/Resolver/resolve(consumerPackageRoot:manifestFilename:dependencies:defaultConfiguration:buildConfiguration:)``
+/// resolver: ``Manifest/Resolver/resolve(consumerPackageRoot:filename:dependencies:defaultConfiguration:buildConfiguration:)``
 /// is unchanged. Callers detect first via ``detect(at:)`` and, when
 /// `true`, dispatch via ``dispatch(at:arguments:)``. When `false`,
 /// they fall through to the existing single-file resolution flow.

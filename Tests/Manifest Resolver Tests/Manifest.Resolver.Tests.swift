@@ -26,7 +26,7 @@ struct ManifestResolverTests {
     func nonExistentRootFallsBackToDefault() throws {
         let result = try Manifest.Resolver<Swift.Int, Configuration>.resolve(
             consumerPackageRoot: "/nonexistent/path/that/should/not/exist",
-            manifestFilename: "Lint.swift",
+            filename: "Lint.swift",
             dependencies: [],
             defaultConfiguration: { Configuration(value: 999) },
             buildConfiguration: { manifest, _ in

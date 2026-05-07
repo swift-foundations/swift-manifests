@@ -32,7 +32,7 @@ struct ManifestNestedPackageTests {
     /// `Lint/Package.swift`. This is the single-file-fallback gate —
     /// when no nested package exists, the resolver caller falls
     /// through to the existing single-file `Lint.swift` chain-
-    /// resolution flow per ``Manifest/Resolver/resolve(consumerPackageRoot:manifestFilename:dependencies:defaultConfiguration:buildConfiguration:)``.
+    /// resolution flow per ``Manifest/Resolver/resolve(consumerPackageRoot:filename:dependencies:defaultConfiguration:buildConfiguration:)``.
     @Test
     func `detect returns false for a directory without Lint nested package`() {
         // swift-manifests itself doesn't host a `Lint/` nested package;

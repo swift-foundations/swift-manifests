@@ -53,7 +53,7 @@ extension Manifest.Resolver {
     /// - Parameters:
     ///   - consumerPackageRoot: filesystem path to the package whose
     ///     manifest is being resolved.
-    ///   - manifestFilename: the manifest's filename inside that
+    ///   - filename: the manifest's filename inside that
     ///     package root (e.g., `"Lint.swift"`).
     ///   - dependencies: the SwiftPM dependencies the manifest's
     ///     driver shim compiles against (passed verbatim to
@@ -74,7 +74,7 @@ extension Manifest.Resolver {
     /// - Throws: ``Manifest/Resolver/Error`` on parent-chain failure.
     public static func resolve(
         consumerPackageRoot: Swift.String,
-        manifestFilename: Swift.String,
+        filename: Swift.String,
         dependencies: [Manifest.Dependency],
         defaultConfiguration: () -> C,
         buildConfiguration: (M, C?) -> C
@@ -85,7 +85,7 @@ extension Manifest.Resolver {
             consumerManifest = try Manifest.load(
                 M.self,
                 from: consumerPackageRoot,
-                named: manifestFilename,
+                named: filename,
                 binding: "manifest",
                 dependencies: dependencies
             )
@@ -97,7 +97,7 @@ extension Manifest.Resolver {
         // read; absence of the source file is indistinguishable from absence of
         // a directive — both produce single-tier results.
         let consumerSource = readSource(
-            at: consumerPackageRoot + "/" + manifestFilename
+            at: consumerPackageRoot + "/" + filename
         )
 
         // Step 3: try to extract a parent URI from the source.
@@ -111,7 +111,7 @@ extension Manifest.Resolver {
         // Step 4: walk the chain. Throws on cycle / depth / fetch / eval failure.
         let parentChain = try walk(
             startingAt: firstParentURI,
-            manifestFilename: manifestFilename,
+            filename: filename,
             dependencies: dependencies
         )
 
@@ -192,7 +192,7 @@ extension Manifest.Resolver {
     @inline(__always)
     internal static func walk(
         startingAt rootURL: URI,
-        manifestFilename: Swift.String,
+        filename: Swift.String,
         dependencies: [Manifest.Dependency]
     ) throws(Self.Error) -> [M] {
         var visited: Set<URI> = []
@@ -216,7 +216,7 @@ extension Manifest.Resolver {
             let parentManifest = try evalParent(
                 content: content,
                 url: uri,
-                manifestFilename: manifestFilename,
+                filename: filename,
                 dependencies: dependencies
             )
             chain.append(parentManifest)
@@ -402,7 +402,7 @@ extension Manifest.Resolver {
     internal static func evalParent(
         content: Swift.String,
         url uri: URI,
-        manifestFilename: Swift.String,
+        filename: Swift.String,
         dependencies: [Manifest.Dependency]
     ) throws(Self.Error) -> M {
         let tempDirectory: File.Path
@@ -420,7 +420,7 @@ extension Manifest.Resolver {
             )
         }
         let tempDirectoryString = tempDirectory.description
-        let tempFilePathString = tempDirectoryString + "/" + manifestFilename
+        let tempFilePathString = tempDirectoryString + "/" + filename
 
         // Best-effort mkdir -p; failure surfaces as the subsequent write failure.
         _ = try? Process.Spawn.run(
@@ -437,7 +437,7 @@ extension Manifest.Resolver {
             throw .parentFetchFailed(
                 url: uri,
                 exitCode: 0,
-                stderr: "write temp \(manifestFilename): \(error)"
+                stderr: "write temp \(filename): \(error)"
             )
         }
 
@@ -445,7 +445,7 @@ extension Manifest.Resolver {
             return try Manifest.load(
                 M.self,
                 from: tempDirectoryString,
-                named: manifestFilename,
+                named: filename,
                 binding: "manifest",
                 dependencies: dependencies
             )
