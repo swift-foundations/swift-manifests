@@ -25,6 +25,7 @@ let package = Package(
     products: [
         .library(name: "Manifest Loader", targets: ["Manifest Loader"]),
         .library(name: "Manifest Resolver", targets: ["Manifest Resolver"]),
+        .library(name: "Manifests Test Support", targets: ["Manifests Test Support"]),
     ],
     dependencies: [
         .package(path: "../../swift-primitives/swift-manifest-primitives"),
@@ -61,17 +62,30 @@ let package = Package(
             ]
         ),
 
+        // MARK: - Test Support
+        .target(
+            name: "Manifests Test Support",
+            dependencies: [
+                "Manifest Loader",
+                "Manifest Resolver",
+                .product(name: "Manifest Primitives Test Support", package: "swift-manifest-primitives"),
+            ],
+            path: "Tests/Support"
+        ),
+
         // MARK: - Tests
         .testTarget(
             name: "Manifest Loader Tests",
             dependencies: [
                 "Manifest Loader",
+                "Manifests Test Support",
             ]
         ),
         .testTarget(
             name: "Manifest Resolver Tests",
             dependencies: [
                 "Manifest Resolver",
+                "Manifests Test Support",
                 .product(name: "File System", package: "swift-file-system"),
                 .product(name: "URI Standard", package: "swift-uri-standard"),
             ]
