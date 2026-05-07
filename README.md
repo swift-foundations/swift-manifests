@@ -22,7 +22,7 @@ let configuration = Manifest.Configuration(
     dependencies: [
         Manifest.Dependency(
             path: "../swift-linter",
-            packageName: "swift-linter",
+            name: "swift-linter",
             product: "Linter",
             imports: ["Linter"]
         )
@@ -52,9 +52,13 @@ let configuration = try Manifest.Resolver<Lint.Manifest, Lint.Configuration>
         consumerPackageRoot: packageRoot,
         manifestFilename: "Lint.swift",
         dependencies: dependencies,
-        defaultConfiguration: { Lint.Configuration() },
+        defaultConfiguration: { .empty },
         buildConfiguration: { manifest, parent in
-            Lint.Configuration(layered: manifest, on: parent)
+            Lint.Configuration(
+                inheriting: parent,
+                rules: { },
+                excluded: manifest.excludedPaths.map { $0.description }
+            )
         }
     )
 ```
