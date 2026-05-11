@@ -78,7 +78,7 @@ extension Manifest.Resolver {
         dependencies: [Manifest.Dependency],
         defaultConfiguration: () -> C,
         buildConfiguration: (M, C?) -> C
-    ) throws(Manifest.Resolver.Error) -> C {
+    ) throws(Manifest.Resolver<M, C>.Error) -> C {
         // Step 1: load consumer manifest. Silent fall-back to defaults on any failure.
         let consumerManifest: M
         do {
@@ -194,7 +194,7 @@ extension Manifest.Resolver {
         startingAt rootURL: URI,
         filename: Swift.String,
         dependencies: [Manifest.Dependency]
-    ) throws(Manifest.Resolver.Error) -> [M] {
+    ) throws(Manifest.Resolver<M, C>.Error) -> [M] {
         var visited: Set<URI> = []
         var visitedOrder: [URI] = []
         var memo: [URI: Swift.String] = [:]
@@ -257,7 +257,7 @@ extension Manifest.Resolver {
     internal static func fetch(
         _ uri: URI,
         memo: inout [URI: Swift.String]
-    ) throws(Manifest.Resolver.Error) -> Swift.String {
+    ) throws(Manifest.Resolver<M, C>.Error) -> Swift.String {
         if let cached = memo[uri] {
             return cached
         }
@@ -276,7 +276,7 @@ extension Manifest.Resolver {
     @inline(__always)
     private static func fetchFile(
         _ uri: URI
-    ) throws(Manifest.Resolver.Error) -> Swift.String {
+    ) throws(Manifest.Resolver<M, C>.Error) -> Swift.String {
         guard let uriPath = uri.path else {
             throw .parentFetchFailed(
                 url: uri,
@@ -311,7 +311,7 @@ extension Manifest.Resolver {
     @inline(__always)
     private static func fetchHTTP(
         _ uri: URI
-    ) throws(Manifest.Resolver.Error) -> Swift.String {
+    ) throws(Manifest.Resolver<M, C>.Error) -> Swift.String {
         let tempPath: File.Path
         do {
             tempPath = try File.Path.Temporary.deterministic(
@@ -404,7 +404,7 @@ extension Manifest.Resolver {
         url uri: URI,
         filename: Swift.String,
         dependencies: [Manifest.Dependency]
-    ) throws(Manifest.Resolver.Error) -> M {
+    ) throws(Manifest.Resolver<M, C>.Error) -> M {
         let tempDirectory: File.Path
         do {
             tempDirectory = try File.Path.Temporary.deterministic(
