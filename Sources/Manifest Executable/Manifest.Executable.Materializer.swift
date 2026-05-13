@@ -11,6 +11,7 @@
 
 internal import File_System
 public import Manifest_Primitives
+internal import Package_Primitives
 
 extension Manifest.Executable {
     /// Renders the eval project (`Package.swift` + `Sources/<executableName>/main.swift`)
@@ -114,9 +115,9 @@ extension Manifest.Executable.Materializer {
             case .path(let path):
                 let resolvedPath: Swift.String = try Self.resolve(path, relativeTo: evalRelativeToConsumer)
                 lines.append("        .package(path: \"\(resolvedPath)\"),")
-            case .urlFrom(let url, let from):
+            case .urlFrom(url: let url, from: let from):
                 lines.append("        .package(url: \"\(url)\", from: \"\(from)\"),")
-            case .urlRange(let url, let lower, let upper):
+            case .urlRange(url: let url, lower: let lower, upper: let upper):
                 lines.append("        .package(url: \"\(url)\", \"\(lower)\"..<\"\(upper)\"),")
             }
         }

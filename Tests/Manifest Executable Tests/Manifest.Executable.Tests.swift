@@ -127,7 +127,7 @@ extension Manifest.Executable.Test.RenderPackageSwift {
             evalRoot: try File.Path("/tmp/swift-foo/.swift-lint/eval"),
             executableName: "Lint",
             dependencies: [
-                Manifest.Executable.PackageDependency(
+                Package.Dependency(
                     source: .urlFrom(
                         url: "https://github.com/apple/swift-argument-parser.git",
                         from: "1.5.0"
@@ -154,7 +154,7 @@ extension Manifest.Executable.Test.RenderPackageSwift {
             evalRoot: try File.Path("/tmp/swift-foo/.swift-lint/eval"),
             executableName: "Lint",
             dependencies: [
-                Manifest.Executable.PackageDependency(
+                Package.Dependency(
                     source: .urlRange(
                         url: "https://github.com/swiftlang/swift-syntax.git",
                         lower: "602.0.0",
@@ -231,7 +231,7 @@ extension Manifest.Executable.Test.RenderPackageSwift {
             evalRoot: try File.Path("/tmp/swift-foo/.swift-lint/eval"),
             executableName: "Lint",
             dependencies: [
-                Manifest.Executable.PackageDependency(
+                Package.Dependency(
                     source: .path("../../swift-primitives-linter-rules"),
                     name: "swift-primitives-linter-rules",
                     products: ["Linter Primitives Rules"]

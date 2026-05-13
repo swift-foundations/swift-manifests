@@ -11,6 +11,7 @@
 
 public import File_System
 public import Manifest_Primitives
+public import Package_Primitives
 
 extension Manifest.Executable {
     /// Parameters for ``Manifest/Executable/dispatch(configuration:)``.
@@ -61,7 +62,7 @@ extension Manifest.Executable {
 
         /// Consumer-extracted dependencies to fold into the eval
         /// target's `Package.swift`.
-        public let dependencies: [Manifest.Executable.PackageDependency]
+        public let dependencies: [Package.Dependency]
 
         /// Platform declarations rendered inside the generated
         /// `Package(platforms:)` array.
@@ -116,7 +117,7 @@ extension Manifest.Executable {
             consumerSourcePath: File.Path,
             evalRoot: File.Path,
             executableName: Swift.String,
-            dependencies: [Manifest.Executable.PackageDependency],
+            dependencies: [Package.Dependency],
             platforms: [Swift.String],
             swiftLanguageModes: [Swift.String],
             ecosystemSettings: [Swift.String]? = nil,
