@@ -25,10 +25,12 @@ let package = Package(
     products: [
         .library(name: "Manifest Loader", targets: ["Manifest Loader"]),
         .library(name: "Manifest Resolver", targets: ["Manifest Resolver"]),
+        .library(name: "Manifest Executable", targets: ["Manifest Executable"]),
         .library(name: "Manifests Test Support", targets: ["Manifests Test Support"]),
     ],
     dependencies: [
         .package(path: "../../swift-primitives/swift-manifest-primitives"),
+        .package(path: "../../swift-primitives/swift-package-primitives"),
         .package(path: "../../swift-standards/swift-uri-standard"),
         .package(path: "../swift-environment"),
         .package(path: "../swift-file-system"),
@@ -62,6 +64,17 @@ let package = Package(
             ]
         ),
 
+        // MARK: - Manifest Executable
+        .target(
+            name: "Manifest Executable",
+            dependencies: [
+                .product(name: "Manifest Primitives", package: "swift-manifest-primitives"),
+                .product(name: "Package Primitives", package: "swift-package-primitives"),
+                .product(name: "File System", package: "swift-file-system"),
+                .product(name: "Process", package: "swift-process"),
+            ]
+        ),
+
         // MARK: - Test Support
         .target(
             name: "Manifests Test Support",
@@ -88,6 +101,14 @@ let package = Package(
                 "Manifests Test Support",
                 .product(name: "File System", package: "swift-file-system"),
                 .product(name: "URI Standard", package: "swift-uri-standard"),
+            ]
+        ),
+        .testTarget(
+            name: "Manifest Executable Tests",
+            dependencies: [
+                "Manifest Executable",
+                "Manifests Test Support",
+                .product(name: "File System", package: "swift-file-system"),
             ]
         ),
     ],
