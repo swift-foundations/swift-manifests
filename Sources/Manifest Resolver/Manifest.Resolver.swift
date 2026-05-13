@@ -48,6 +48,36 @@ extension Manifest {
 }
 
 extension Manifest.Resolver {
+    /// Walk the parent chain expressed in `consumerSource` and return
+    /// the parent manifests in parent-first (root-most first) order.
+    ///
+    /// Unlike ``resolve(consumerPackageRoot:filename:dependencies:defaultConfiguration:buildConfiguration:)``,
+    /// this method does NOT evaluate a consumer manifest — it only
+    /// walks the parent chain expressed by `// parent: <URL>`
+    /// directives in `consumerSource`. Use when the consumer's
+    /// configuration is produced by some other mechanism (e.g., a
+    /// Shape γ executable `Lint.swift` whose rule activations are
+    /// real Swift witness references, but whose inherited rule set
+    /// is still a wire-format `Lint.Manifest` chain).
+    ///
+    /// Returns an empty array when `consumerSource` contains no
+    /// recognized parent directive. Throws on chain failure (cycle,
+    /// depth, fetch, eval).
+    public static func walkParents(
+        from consumerSource: Swift.String,
+        filename: Swift.String,
+        dependencies: [Manifest.Dependency]
+    ) throws(Manifest.Resolver<M, C>.Error) -> [M] {
+        guard let firstParentURI = parseParent(in: consumerSource) else {
+            return []
+        }
+        return try walk(
+            startingAt: firstParentURI,
+            filename: filename,
+            dependencies: dependencies
+        )
+    }
+
     /// Resolve the configuration for `consumerPackageRoot`.
     ///
     /// - Parameters:
