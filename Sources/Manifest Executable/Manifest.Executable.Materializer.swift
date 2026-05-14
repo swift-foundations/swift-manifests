@@ -114,10 +114,10 @@ extension Manifest.Executable.Materializer {
         for dep in configuration.dependencies {
             switch dep.source {
             case .path(let path):
-                let resolvedPath: Swift.String = try Self.resolve(path, relativeTo: evalRelativeToConsumer)
+                let resolvedPath: Swift.String = try Self.resolve(path.string, relativeTo: evalRelativeToConsumer)
                 lines.append("        .package(path: \"\(resolvedPath)\"),")
             case .url(let url, let requirement):
-                lines.append(Self.render(url: url, requirement: requirement))
+                lines.append(Self.render(url: url.value, requirement: requirement))
             case .registry(let identity, let requirement):
                 lines.append(Self.render(registry: identity, requirement: requirement))
             }
