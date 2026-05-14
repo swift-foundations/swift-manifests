@@ -12,6 +12,7 @@
 internal import File_System
 public import Manifest_Primitives
 internal import Package_Primitives
+internal import SPM_Standard
 
 extension Manifest.Executable {
     /// Renders the eval project (`Package.swift` + `Sources/<executableName>/main.swift`)
@@ -115,10 +116,10 @@ extension Manifest.Executable.Materializer {
             case .path(let path):
                 let resolvedPath: Swift.String = try Self.resolve(path, relativeTo: evalRelativeToConsumer)
                 lines.append("        .package(path: \"\(resolvedPath)\"),")
-            case .urlFrom(url: let url, from: let from):
-                lines.append("        .package(url: \"\(url)\", from: \"\(from)\"),")
-            case .urlRange(url: let url, lower: let lower, upper: let upper):
-                lines.append("        .package(url: \"\(url)\", \"\(lower)\"..<\"\(upper)\"),")
+            case .url(let url, let requirement):
+                lines.append(Self.renderURLDep(url: url, requirement: requirement))
+            case .registry(let identity, let requirement):
+                lines.append(Self.renderRegistryDep(identity: identity, requirement: requirement))
             }
         }
 
@@ -160,6 +161,83 @@ extension Manifest.Executable.Materializer {
         }
 
         return lines.joined(separator: "\n")
+    }
+
+    /// Render a `.package(url:..., <requirement>)` PackageDescription
+    /// token from a typed `Package.Requirement`. Every variant maps
+    /// directly to a PackageDescription clause the eval `Package.swift`
+    /// can accept.
+    @usableFromInline
+    internal static func renderURLDep(
+        url: Swift.String,
+        requirement: Package.Requirement
+    ) -> Swift.String {
+        switch requirement {
+        case .from(let version):
+            return "        .package(url: \"\(url)\", from: \"\(version)\"),"
+        case .upToNextMajor(from: let version):
+            return "        .package(url: \"\(url)\", .upToNextMajor(from: \"\(version)\")),"
+        case .upToNextMinor(from: let version):
+            return "        .package(url: \"\(url)\", .upToNextMinor(from: \"\(version)\")),"
+        case .range(let range):
+            let lower: Swift.String = Self.boundLiteral(range.lowerBound)
+            let upper: Swift.String = Self.boundLiteral(range.upperBound)
+            return "        .package(url: \"\(url)\", \"\(lower)\"..<\"\(upper)\"),"
+        case .exact(let version):
+            return "        .package(url: \"\(url)\", exact: \"\(version)\"),"
+        case .branch(let branch):
+            return "        .package(url: \"\(url)\", branch: \"\(branch)\"),"
+        case .revision(let revision):
+            return "        .package(url: \"\(url)\", revision: \"\(revision)\"),"
+        }
+    }
+
+    /// Render a `.package(id:..., <requirement>)` PackageDescription
+    /// token from a typed SE-0292 registry identity plus requirement.
+    @usableFromInline
+    internal static func renderRegistryDep(
+        identity: Package.Identity,
+        requirement: Package.Requirement
+    ) -> Swift.String {
+        let id: Swift.String = "\(identity.scope).\(identity.name)"
+        switch requirement {
+        case .from(let version):
+            return "        .package(id: \"\(id)\", from: \"\(version)\"),"
+        case .upToNextMajor(from: let version):
+            return "        .package(id: \"\(id)\", .upToNextMajor(from: \"\(version)\")),"
+        case .upToNextMinor(from: let version):
+            return "        .package(id: \"\(id)\", .upToNextMinor(from: \"\(version)\")),"
+        case .range(let range):
+            let lower: Swift.String = Self.boundLiteral(range.lowerBound)
+            let upper: Swift.String = Self.boundLiteral(range.upperBound)
+            return "        .package(id: \"\(id)\", \"\(lower)\"..<\"\(upper)\"),"
+        case .exact(let version):
+            return "        .package(id: \"\(id)\", exact: \"\(version)\"),"
+        case .branch, .revision:
+            // Registry-form does not support branch/revision constraints —
+            // git-ref deps are URL-form only. Fall back to exact-form-not-
+            // applicable; SwiftPM will reject the generated literal at parse
+            // time, surfacing the misuse to the consumer.
+            return "        // ERROR: registry deps do not support branch/revision: \(id)"
+        }
+    }
+
+    /// Extract the semantic-version literal from a typed bound. The
+    /// half-open range format SwiftPM accepts is always inclusive-lower
+    /// + exclusive-upper; `.unbounded` is not part of SwiftPM's wire
+    /// shape and surfaces as a defensive fallback.
+    @usableFromInline
+    internal static func boundLiteral(
+        _ bound: Version.Range<Version.Semantic>.Bound
+    ) -> Swift.String {
+        switch bound {
+        case .inclusive(let version):
+            return "\(version)"
+        case .exclusive(let version):
+            return "\(version)"
+        case .unbounded:
+            return "0.0.0"
+        }
     }
 
     /// Compute the relative prefix (e.g., `"../.."`) from

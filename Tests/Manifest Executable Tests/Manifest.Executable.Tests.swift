@@ -11,6 +11,7 @@
 
 import Testing
 @testable import Manifest_Executable
+import SPM_Standard
 
 extension Manifest.Executable {
     @Suite struct Test {
@@ -128,9 +129,9 @@ extension Manifest.Executable.Test.RenderPackageSwift {
             executableName: "Lint",
             dependencies: [
                 Package.Dependency(
-                    source: .urlFrom(
-                        url: "https://github.com/apple/swift-argument-parser.git",
-                        from: "1.5.0"
+                    source: .url(
+                        "https://github.com/apple/swift-argument-parser.git",
+                        .from(try Version.Semantic(parsing: "1.5.0"))
                     ),
                     name: "swift-argument-parser",
                     products: ["ArgumentParser"]
@@ -148,6 +149,12 @@ extension Manifest.Executable.Test.RenderPackageSwift {
 
     @Test
     func `url-range dep emits half-open range form`() throws {
+        let lower = try Version.Semantic(parsing: "602.0.0")
+        let upper = try Version.Semantic(parsing: "603.0.0")
+        let range = Version.Range<Version.Semantic>(
+            lowerBound: .inclusive(lower),
+            upperBound: .exclusive(upper)
+        )
         let configuration = Manifest.Executable.Configuration(
             consumerPackageRoot: try File.Path("/tmp/swift-foo"),
             consumerSourcePath: try File.Path("/tmp/swift-foo/Lint.swift"),
@@ -155,10 +162,9 @@ extension Manifest.Executable.Test.RenderPackageSwift {
             executableName: "Lint",
             dependencies: [
                 Package.Dependency(
-                    source: .urlRange(
-                        url: "https://github.com/swiftlang/swift-syntax.git",
-                        lower: "602.0.0",
-                        upper: "603.0.0"
+                    source: .url(
+                        "https://github.com/swiftlang/swift-syntax.git",
+                        .range(range)
                     ),
                     name: "swift-syntax",
                     products: ["SwiftSyntax"]

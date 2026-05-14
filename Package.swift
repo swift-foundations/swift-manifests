@@ -31,6 +31,7 @@ let package = Package(
     dependencies: [
         .package(path: "../../swift-primitives/swift-manifest-primitives"),
         .package(path: "../../swift-primitives/swift-package-primitives"),
+        .package(path: "../../swift-standards/swift-spm-standard"),
         .package(path: "../../swift-standards/swift-uri-standard"),
         .package(path: "../swift-environment"),
         .package(path: "../swift-file-system"),
@@ -70,6 +71,7 @@ let package = Package(
             dependencies: [
                 .product(name: "Manifest Primitives", package: "swift-manifest-primitives"),
                 .product(name: "Package Primitives", package: "swift-package-primitives"),
+                .product(name: "SPM Standard", package: "swift-spm-standard"),
                 .product(name: "File System", package: "swift-file-system"),
                 .product(name: "Process", package: "swift-process"),
             ]

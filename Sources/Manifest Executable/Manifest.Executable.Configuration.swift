@@ -12,6 +12,7 @@
 public import File_System
 public import Manifest_Primitives
 public import Package_Primitives
+public import SPM_Standard
 
 extension Manifest.Executable {
     /// Parameters for ``Manifest/Executable/dispatch(configuration:)``.
