@@ -131,7 +131,7 @@ extension Manifest.Executable.Test.RenderPackageSwift {
                 Package.Dependency(
                     source: .url(
                         "https://github.com/apple/swift-argument-parser.git",
-                        .from(try Version.Semantic(parsing: "1.5.0"))
+                        .from("1.5.0")
                     ),
                     name: "swift-argument-parser",
                     products: ["ArgumentParser"]
@@ -149,12 +149,6 @@ extension Manifest.Executable.Test.RenderPackageSwift {
 
     @Test
     func `url-range dep emits half-open range form`() throws {
-        let lower = try Version.Semantic(parsing: "602.0.0")
-        let upper = try Version.Semantic(parsing: "603.0.0")
-        let range = Version.Range<Version.Semantic>(
-            lowerBound: .inclusive(lower),
-            upperBound: .exclusive(upper)
-        )
         let configuration = Manifest.Executable.Configuration(
             consumerPackageRoot: try File.Path("/tmp/swift-foo"),
             consumerSourcePath: try File.Path("/tmp/swift-foo/Lint.swift"),
@@ -164,7 +158,7 @@ extension Manifest.Executable.Test.RenderPackageSwift {
                 Package.Dependency(
                     source: .url(
                         "https://github.com/swiftlang/swift-syntax.git",
-                        .range(range)
+                        .range(Version.Range("602.0.0"..<"603.0.0"))
                     ),
                     name: "swift-syntax",
                     products: ["SwiftSyntax"]
