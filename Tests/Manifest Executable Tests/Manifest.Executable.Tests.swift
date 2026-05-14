@@ -131,7 +131,7 @@ extension Manifest.Executable.Test.RenderPackageSwift {
                 Package.Dependency(
                     source: .url(
                         "https://github.com/apple/swift-argument-parser.git",
-                        .from("1.5.0")
+                        from: "1.5.0"
                     ),
                     name: "swift-argument-parser",
                     products: ["ArgumentParser"]
@@ -158,7 +158,7 @@ extension Manifest.Executable.Test.RenderPackageSwift {
                 Package.Dependency(
                     source: .url(
                         "https://github.com/swiftlang/swift-syntax.git",
-                        .range(Version.Range("602.0.0"..<"603.0.0"))
+                        "602.0.0"..<"603.0.0"
                     ),
                     name: "swift-syntax",
                     products: ["SwiftSyntax"]
