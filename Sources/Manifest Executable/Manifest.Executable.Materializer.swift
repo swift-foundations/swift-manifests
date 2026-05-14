@@ -117,9 +117,9 @@ extension Manifest.Executable.Materializer {
                 let resolvedPath: Swift.String = try Self.resolve(path, relativeTo: evalRelativeToConsumer)
                 lines.append("        .package(path: \"\(resolvedPath)\"),")
             case .url(let url, let requirement):
-                lines.append(Self.renderURLDep(url: url, requirement: requirement))
+                lines.append(Self.render(url: url, requirement: requirement))
             case .registry(let identity, let requirement):
-                lines.append(Self.renderRegistryDep(identity: identity, requirement: requirement))
+                lines.append(Self.render(registry: identity, requirement: requirement))
             }
         }
 
@@ -167,8 +167,11 @@ extension Manifest.Executable.Materializer {
     /// token from a typed `Package.Requirement`. Every variant maps
     /// directly to a PackageDescription clause the eval `Package.swift`
     /// can accept.
-    @usableFromInline
-    internal static func renderURLDep(
+    ///
+    /// Fileprivate per `[API-NAME-002]` — the helper's compound-shape
+    /// name is exempt from the no-compound-identifier rule at this
+    /// visibility scope.
+    fileprivate static func render(
         url: Swift.String,
         requirement: Package.Requirement
     ) -> Swift.String {
@@ -180,9 +183,7 @@ extension Manifest.Executable.Materializer {
         case .upToNextMinor(from: let version):
             return "        .package(url: \"\(url)\", .upToNextMinor(from: \"\(version)\")),"
         case .range(let range):
-            let lower: Swift.String = Self.boundLiteral(range.lowerBound)
-            let upper: Swift.String = Self.boundLiteral(range.upperBound)
-            return "        .package(url: \"\(url)\", \"\(lower)\"..<\"\(upper)\"),"
+            return "        .package(url: \"\(url)\", \(Self.rangeLiteral(range))),"
         case .exact(let version):
             return "        .package(url: \"\(url)\", exact: \"\(version)\"),"
         case .branch(let branch):
@@ -194,9 +195,8 @@ extension Manifest.Executable.Materializer {
 
     /// Render a `.package(id:..., <requirement>)` PackageDescription
     /// token from a typed SE-0292 registry identity plus requirement.
-    @usableFromInline
-    internal static func renderRegistryDep(
-        identity: Package.Identity,
+    fileprivate static func render(
+        registry identity: Package.Identity,
         requirement: Package.Requirement
     ) -> Swift.String {
         let id: Swift.String = "\(identity.scope).\(identity.name)"
@@ -208,36 +208,33 @@ extension Manifest.Executable.Materializer {
         case .upToNextMinor(from: let version):
             return "        .package(id: \"\(id)\", .upToNextMinor(from: \"\(version)\")),"
         case .range(let range):
-            let lower: Swift.String = Self.boundLiteral(range.lowerBound)
-            let upper: Swift.String = Self.boundLiteral(range.upperBound)
-            return "        .package(id: \"\(id)\", \"\(lower)\"..<\"\(upper)\"),"
+            return "        .package(id: \"\(id)\", \(Self.rangeLiteral(range))),"
         case .exact(let version):
             return "        .package(id: \"\(id)\", exact: \"\(version)\"),"
         case .branch, .revision:
-            // Registry-form does not support branch/revision constraints —
-            // git-ref deps are URL-form only. Fall back to exact-form-not-
-            // applicable; SwiftPM will reject the generated literal at parse
-            // time, surfacing the misuse to the consumer.
+            // Registry-form deps do not support branch/revision constraints —
+            // those clauses are URL-form only. The generated literal is left
+            // as a SwiftPM-parse-error placeholder so the misuse surfaces
+            // loudly at eval-project build time rather than silently
+            // emitting a wrong-but-valid token.
             return "        // ERROR: registry deps do not support branch/revision: \(id)"
         }
     }
 
-    /// Extract the semantic-version literal from a typed bound. The
-    /// half-open range format SwiftPM accepts is always inclusive-lower
-    /// + exclusive-upper; `.unbounded` is not part of SwiftPM's wire
-    /// shape and surfaces as a defensive fallback.
-    @usableFromInline
-    internal static func boundLiteral(
-        _ bound: Version.Range<Version.Semantic>.Bound
+    /// Render a typed `Version.Range<Version.Semantic>` as a half-open
+    /// `"lower"..<"upper"` SwiftPM literal pair. SwiftPM accepts
+    /// inclusive-lower / exclusive-upper bounds only; other shapes
+    /// produce a clearly-malformed placeholder so SwiftPM's manifest
+    /// parser surfaces the error at eval time.
+    fileprivate static func rangeLiteral(
+        _ range: Version.Range<Version.Semantic>
     ) -> Swift.String {
-        switch bound {
-        case .inclusive(let version):
-            return "\(version)"
-        case .exclusive(let version):
-            return "\(version)"
-        case .unbounded:
-            return "0.0.0"
+        guard case .inclusive(let lower) = range.lowerBound,
+              case .exclusive(let upper) = range.upperBound
+        else {
+            return "/* ERROR: range deps require .inclusive lower / .exclusive upper */"
         }
+        return "\"\(lower)\"..<\"\(upper)\""
     }
 
     /// Compute the relative prefix (e.g., `"../.."`) from
