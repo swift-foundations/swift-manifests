@@ -85,7 +85,7 @@ extension Manifest.NestedPackage {
         )
         let status: Process.Status
         do throws(Process.Error) {
-            status = try Process.Spawn.run(configuration)
+            status = try Process.Spawn.run(configuration).status
         } catch {
             throw .spawnFailed(
                 consumerPackageRoot: consumerPackageRoot,

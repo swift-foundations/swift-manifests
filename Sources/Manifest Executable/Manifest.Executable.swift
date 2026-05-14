@@ -80,7 +80,7 @@ extension Manifest.Executable {
         )
         let status: Process.Status
         do throws(Process.Error) {
-            status = try Process.Spawn.run(spawnConfiguration)
+            status = try Process.Spawn.run(spawnConfiguration).status
         } catch {
             throw .spawnFailed(
                 consumerPackageRoot: configuration.consumerPackageRoot,

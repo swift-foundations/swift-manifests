@@ -322,7 +322,7 @@ extension Manifest {
                     executable: executable,
                     arguments: arguments
                 )
-            )
+            ).status
         } catch {
             throw .driverProcess(error)
         }

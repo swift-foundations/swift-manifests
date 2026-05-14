@@ -364,7 +364,7 @@ extension Manifest.Resolver {
 
         let status: Process.Status
         do {
-            status = try Process.Spawn.run(configuration)
+            status = try Process.Spawn.run(configuration).status
         } catch {
             throw .parentFetchFailed(
                 url: uri,
