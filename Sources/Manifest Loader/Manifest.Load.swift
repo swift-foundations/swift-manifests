@@ -179,10 +179,10 @@ extension Manifest {
         } catch {
             throw .outputCaptureFailed(reason: "invalid path \(absolutePath): \(error)")
         }
-        let bytes: [UInt8]
+        let bytes: [Byte]
         do throws(File.System.Read.Full.Error) {
-            bytes = try File(path).read.full { (span: Span<UInt8>) -> [UInt8] in
-                var array: [UInt8] = []
+            bytes = try File(path).read.full { (span: Span<Byte>) -> [Byte] in
+                var array: [Byte] = []
                 array.reserveCapacity(span.count)
                 for i in 0..<span.count {
                     array.append(span[i])

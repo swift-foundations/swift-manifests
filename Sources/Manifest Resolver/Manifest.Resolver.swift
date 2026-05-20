@@ -164,9 +164,9 @@ extension Manifest.Resolver {
     private static func readSource(at path: Swift.String) -> Swift.String? {
         do {
             let filePath = try File.Path(path)
-            let bytes: [Swift.UInt8] = try File(filePath).read.full {
-                (span: Span<Swift.UInt8>) -> [Swift.UInt8] in
-                var array: [Swift.UInt8] = []
+            let bytes: [Byte] = try File(filePath).read.full {
+                (span: Span<Byte>) -> [Byte] in
+                var array: [Byte] = []
                 array.reserveCapacity(span.count)
                 for i in 0..<span.count { array.append(span[i]) }
                 return array
@@ -322,9 +322,9 @@ extension Manifest.Resolver {
         }
         do {
             let filePath = try File.Path(pathString)
-            let bytes: [Swift.UInt8] = try File(filePath).read.full {
-                (span: Span<Swift.UInt8>) -> [Swift.UInt8] in
-                var array: [Swift.UInt8] = []
+            let bytes: [Byte] = try File(filePath).read.full {
+                (span: Span<Byte>) -> [Byte] in
+                var array: [Byte] = []
                 array.reserveCapacity(span.count)
                 for i in 0..<span.count { array.append(span[i]) }
                 return array
@@ -389,9 +389,9 @@ extension Manifest.Resolver {
 
         let content: Swift.String
         do {
-            let bytes: [Swift.UInt8] = try File(tempPath).read.full {
-                (span: Span<Swift.UInt8>) -> [Swift.UInt8] in
-                var array: [Swift.UInt8] = []
+            let bytes: [Byte] = try File(tempPath).read.full {
+                (span: Span<Byte>) -> [Byte] in
+                var array: [Byte] = []
                 array.reserveCapacity(span.count)
                 for i in 0..<span.count { array.append(span[i]) }
                 return array
