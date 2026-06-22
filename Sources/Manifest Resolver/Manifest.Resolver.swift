@@ -165,7 +165,7 @@ extension Manifest.Resolver {
         do {
             let filePath = try File.Path(path)
             let bytes: [Byte] = try File(filePath).read.full {
-                (span: Span<Byte>) -> [Byte] in
+                (span: Swift.Span<Byte>) -> [Byte] in
                 var array: [Byte] = []
                 array.reserveCapacity(span.count)
                 for i in 0..<span.count { array.append(span[i]) }
@@ -323,7 +323,7 @@ extension Manifest.Resolver {
         do {
             let filePath = try File.Path(pathString)
             let bytes: [Byte] = try File(filePath).read.full {
-                (span: Span<Byte>) -> [Byte] in
+                (span: Swift.Span<Byte>) -> [Byte] in
                 var array: [Byte] = []
                 array.reserveCapacity(span.count)
                 for i in 0..<span.count { array.append(span[i]) }
@@ -390,7 +390,7 @@ extension Manifest.Resolver {
         let content: Swift.String
         do {
             let bytes: [Byte] = try File(tempPath).read.full {
-                (span: Span<Byte>) -> [Byte] in
+                (span: Swift.Span<Byte>) -> [Byte] in
                 var array: [Byte] = []
                 array.reserveCapacity(span.count)
                 for i in 0..<span.count { array.append(span[i]) }

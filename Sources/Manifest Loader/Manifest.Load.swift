@@ -181,7 +181,7 @@ extension Manifest {
         }
         let bytes: [Byte]
         do throws(File.System.Read.Full.Error) {
-            bytes = try File(path).read.full { (span: Span<Byte>) -> [Byte] in
+            bytes = try File(path).read.full { (span: Swift.Span<Byte>) -> [Byte] in
                 var array: [Byte] = []
                 array.reserveCapacity(span.count)
                 for i in 0..<span.count {
