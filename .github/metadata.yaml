@@ -1,5 +1,5 @@
 # .github/metadata.yaml
-description: "Generic Swift-DSL manifest loader (compile, run, capture typed value as JSON)."
+description: "A Swift-DSL manifest loader and parent-chain resolver that compiles typed configuration values via SwiftPM for Swift."
 topics:
   - foundations
   - manifest
