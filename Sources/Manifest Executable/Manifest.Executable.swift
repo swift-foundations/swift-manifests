@@ -67,8 +67,8 @@ extension Manifest.Executable {
     ///   failure, or spawn failure.
     public static func dispatch(
         configuration: Configuration
-    ) throws(Manifest.Executable.Error) -> Swift.Int32 {
-        try Manifest.Executable.Materializer.materialize(configuration: configuration)
+    ) throws(Self.Error) -> Swift.Int32 {
+        try Self.Materializer.materialize(configuration: configuration)
 
         let invocation: [Swift.String] =
             ["swift", "run", "--package-path", configuration.evalRoot.string, configuration.executableName]

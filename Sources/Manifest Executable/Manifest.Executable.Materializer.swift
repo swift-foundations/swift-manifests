@@ -91,7 +91,7 @@ extension Manifest.Executable.Materializer {
             "import PackageDescription",
             "",
             "let package = Package(",
-            "    name: \"\(configuration.executableName)\","
+            "    name: \"\(configuration.executableName)\",",
         ]
 
         if configuration.platforms.isEmpty {
@@ -108,7 +108,7 @@ extension Manifest.Executable.Materializer {
             "    products: [",
             "        .executable(name: \"\(configuration.executableName)\", targets: [\"\(configuration.executableName)\"]),",
             "    ],",
-            "    dependencies: ["
+            "    dependencies: [",
         ])
 
         for dep in configuration.dependencies {
@@ -116,8 +116,10 @@ extension Manifest.Executable.Materializer {
             case .path(let path):
                 let resolvedPath: Swift.String = try Self.resolve(path.string, relativeTo: evalRelativeToConsumer)
                 lines.append("        .package(path: \"\(resolvedPath)\"),")
+
             case .url(let url, let requirement):
                 lines.append(Self.render(url: url.value, requirement: requirement))
+
             case .registry(let identity, let requirement):
                 lines.append(Self.render(registry: identity, requirement: requirement))
             }
@@ -128,7 +130,7 @@ extension Manifest.Executable.Materializer {
             "    targets: [",
             "        .executableTarget(",
             "            name: \"\(configuration.executableName)\",",
-            "            dependencies: ["
+            "            dependencies: [",
         ])
 
         for dep in configuration.dependencies {
@@ -140,7 +142,7 @@ extension Manifest.Executable.Materializer {
         lines.append(contentsOf: [
             "            ]",
             "        ),",
-            "    ],"
+            "    ],",
         ])
 
         let modes: Swift.String = configuration.swiftLanguageModes.joined(separator: ", ")
@@ -178,16 +180,22 @@ extension Manifest.Executable.Materializer {
         switch requirement {
         case .from(let version):
             return "        .package(url: \"\(url)\", from: \"\(version)\"),"
+
         case .upToNextMajor(from: let version):
             return "        .package(url: \"\(url)\", .upToNextMajor(from: \"\(version)\")),"
+
         case .upToNextMinor(from: let version):
             return "        .package(url: \"\(url)\", .upToNextMinor(from: \"\(version)\")),"
+
         case .range(let range):
             return "        .package(url: \"\(url)\", \(Self.rangeLiteral(range))),"
+
         case .exact(let version):
             return "        .package(url: \"\(url)\", exact: \"\(version)\"),"
+
         case .branch(let branch):
             return "        .package(url: \"\(url)\", branch: \"\(branch)\"),"
+
         case .revision(let revision):
             return "        .package(url: \"\(url)\", revision: \"\(revision)\"),"
         }
@@ -203,14 +211,19 @@ extension Manifest.Executable.Materializer {
         switch requirement {
         case .from(let version):
             return "        .package(id: \"\(id)\", from: \"\(version)\"),"
+
         case .upToNextMajor(from: let version):
             return "        .package(id: \"\(id)\", .upToNextMajor(from: \"\(version)\")),"
+
         case .upToNextMinor(from: let version):
             return "        .package(id: \"\(id)\", .upToNextMinor(from: \"\(version)\")),"
+
         case .range(let range):
             return "        .package(id: \"\(id)\", \(Self.rangeLiteral(range))),"
+
         case .exact(let version):
             return "        .package(id: \"\(id)\", exact: \"\(version)\"),"
+
         case .branch, .revision:
             // Registry-form deps do not support branch/revision constraints —
             // those clauses are URL-form only. The generated literal is left
@@ -230,7 +243,7 @@ extension Manifest.Executable.Materializer {
         _ range: Version.Range<Version.Semantic>
     ) -> Swift.String {
         guard case .inclusive(let lower) = range.lowerBound,
-              case .exclusive(let upper) = range.upperBound
+            case .exclusive(let upper) = range.upperBound
         else {
             return "/* ERROR: range deps require .inclusive lower / .exclusive upper */"
         }

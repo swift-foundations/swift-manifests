@@ -9,9 +9,10 @@
 //
 // ===----------------------------------------------------------------------===//
 
-import Testing
-@testable import Manifest_Executable
 import SPM_Standard
+import Testing
+
+@testable import Manifest_Executable
 
 extension Manifest.Executable {
     @Suite struct Test {
@@ -135,7 +136,7 @@ extension Manifest.Executable.Test.RenderPackageSwift {
                     ),
                     name: "swift-argument-parser",
                     products: ["ArgumentParser"]
-                ),
+                )
             ],
             platforms: [".macOS(.v26)"],
             swiftLanguageModes: [".v6"],
@@ -162,7 +163,7 @@ extension Manifest.Executable.Test.RenderPackageSwift {
                     ),
                     name: "swift-syntax",
                     products: ["SwiftSyntax"]
-                ),
+                )
             ],
             platforms: [".macOS(.v26)"],
             swiftLanguageModes: [".v6"],
@@ -235,7 +236,7 @@ extension Manifest.Executable.Test.RenderPackageSwift {
                     source: .path("../../swift-primitives-linter-rules"),
                     name: "swift-primitives-linter-rules",
                     products: ["Linter Primitives Rules"]
-                ),
+                )
             ],
             platforms: [".macOS(.v26)"],
             swiftLanguageModes: [".v6"],

@@ -10,12 +10,14 @@
 // ===----------------------------------------------------------------------===//
 
 import Testing
-#if canImport(Darwin)
-import Darwin
-#elseif canImport(Glibc)
-import Glibc
-#endif
+
 @testable import Manifest_Loader
+
+#if canImport(Darwin)
+    import Darwin
+#elseif canImport(Glibc)
+    import Glibc
+#endif
 
 extension Manifest {
     @Suite struct Test {
@@ -67,7 +69,7 @@ extension Manifest.Test.Integration {
                     name: "swift-file-system",
                     product: "File System",
                     imports: []
-                )
+                ),
             ]
         )
 

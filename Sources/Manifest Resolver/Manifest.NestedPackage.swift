@@ -75,7 +75,7 @@ extension Manifest.NestedPackage {
     public static func dispatch(
         at consumerPackageRoot: Swift.String,
         arguments: [Swift.String]
-    ) throws(Manifest.NestedPackage.Error) -> Swift.Int32 {
+    ) throws(Self.Error) -> Swift.Int32 {
         let lintPackagePath = consumerPackageRoot + "/Lint"
         let invocation: [Swift.String] =
             ["swift", "run", "--package-path", lintPackagePath, "Lint"] + arguments

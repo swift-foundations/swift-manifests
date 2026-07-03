@@ -9,10 +9,11 @@
 //
 // ===----------------------------------------------------------------------===//
 
-import Testing
-@testable import Manifest_Resolver
 import File_System
+import Testing
 import URI_Standard
+
+@testable import Manifest_Resolver
 
 @Suite("Manifest.Resolver")
 struct ManifestResolverTests {
@@ -74,6 +75,7 @@ struct ManifestResolverTests {
             switch error {
             case .parentFetchFailed(let url, _, _):
                 #expect(url == uri)
+
             default:
                 Issue.record("unexpected error: \(error)")
             }

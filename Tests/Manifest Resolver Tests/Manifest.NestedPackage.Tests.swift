@@ -10,6 +10,7 @@
 // ===----------------------------------------------------------------------===//
 
 import Testing
+
 @testable import Manifest_Resolver
 
 @Suite("Manifest.NestedPackage")

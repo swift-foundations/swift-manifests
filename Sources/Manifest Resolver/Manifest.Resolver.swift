@@ -190,8 +190,8 @@ extension Manifest.Resolver {
         }
         guard
             urlBytes.starts(with: schemePrefixHTTP)
-            || urlBytes.starts(with: schemePrefixHTTPS)
-            || urlBytes.starts(with: schemePrefixFile)
+                || urlBytes.starts(with: schemePrefixHTTPS)
+                || urlBytes.starts(with: schemePrefixFile)
         else { return nil }
         let urlString = Swift.String(decoding: urlBytes, as: UTF8.self)
         return try? URI(urlString)
@@ -201,9 +201,9 @@ extension Manifest.Resolver {
 
 // File-scope so the constants compile inside a generic extension —
 // Swift forbids static stored properties on generic types.
-private let schemePrefixHTTP:  [Swift.UInt8] = Swift.Array("http://".utf8)
+private let schemePrefixHTTP: [Swift.UInt8] = Swift.Array("http://".utf8)
 private let schemePrefixHTTPS: [Swift.UInt8] = Swift.Array("https://".utf8)
-private let schemePrefixFile:  [Swift.UInt8] = Swift.Array("file://".utf8)
+private let schemePrefixFile: [Swift.UInt8] = Swift.Array("file://".utf8)
 
 // MARK: - Chain walk
 
@@ -252,9 +252,9 @@ extension Manifest.Resolver {
             chain.append(parentManifest)
             // Re-parse the same content for the next parent URI.
             if let nextBytes = Manifest.Parent.scan(in: content),
-               nextBytes.starts(with: schemePrefixHTTP)
-               || nextBytes.starts(with: schemePrefixHTTPS)
-               || nextBytes.starts(with: schemePrefixFile)
+                nextBytes.starts(with: schemePrefixHTTP)
+                    || nextBytes.starts(with: schemePrefixHTTPS)
+                    || nextBytes.starts(with: schemePrefixFile)
             {
                 let urlString = Swift.String(decoding: nextBytes, as: UTF8.self)
                 currentURI = try? URI(urlString)
