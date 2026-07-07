@@ -38,16 +38,16 @@ extension Manifest.Executable {
         /// The consumer-authored source file copied into the eval
         /// target as `main.swift`.
         ///
-        /// Typically `<consumerPackageRoot>/<filename>` (e.g.,
-        /// `<root>/Lint.swift`). The file is read once; its bytes
+        /// Typically `<consumerPackageRoot>/<filename>`, such as
+        /// `<root>/Lint.swift`. The file is read once; its bytes
         /// become the materialized eval target's entry point.
         public let consumerSourcePath: File.Path
 
         /// The materialized eval project's root directory.
         ///
         /// Conventional location is a gitignored cache directory
-        /// under the consumer's root (e.g.,
-        /// `<consumerPackageRoot>/.swift-lint/eval/`). MUST be a
+        /// under the consumer's root, such as
+        /// `<consumerPackageRoot>/.swift-lint/eval/`. MUST be a
         /// descendant of ``consumerPackageRoot``.
         public let evalRoot: File.Path
 

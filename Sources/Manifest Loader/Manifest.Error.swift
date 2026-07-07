@@ -20,7 +20,7 @@ extension Manifest {
     /// distinguish failure modes without parsing strings.
     public enum Error: Swift.Error, Sendable {
         /// The package root or manifest filename failed validation
-        /// (interior NUL, missing manifest file, etc.). The wrapped
+        /// such as an interior NUL or a missing manifest file. The wrapped
         /// `reason` describes the specific issue.
         case invalidInput(reason: Swift.String)
 
@@ -35,8 +35,8 @@ extension Manifest {
         /// the manifest itself.
         case driverNonZeroStatus(Process.Status)
 
-        /// Reading the captured output file failed (file not
-        /// produced, permission, etc.). The wrapped `reason`
+        /// Reading the captured output file failed — for example, the file
+        /// was not produced, or a permission error occurred. The wrapped `reason`
         /// describes the specific issue.
         case outputCaptureFailed(reason: Swift.String)
 

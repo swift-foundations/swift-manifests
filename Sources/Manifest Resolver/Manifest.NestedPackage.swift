@@ -47,10 +47,16 @@ extension Manifest.NestedPackage {
         at consumerPackageRoot: Swift.String
     ) -> Swift.Bool {
         let lintDirectoryPath = consumerPackageRoot + "/Lint"
-        guard let directory = try? File.Directory(validating: lintDirectoryPath) else {
+        let directory: File.Directory
+        do throws(File.Path.Error) {
+            directory = try File.Directory(validating: lintDirectoryPath)
+        } catch {
             return false
         }
-        guard let entries = try? directory.entries() else {
+        let entries: [File.Directory.Entry]
+        do throws(File.Directory.Contents.Error) {
+            entries = try directory.entries()
+        } catch {
             return false
         }
         for entry in entries where Swift.String(entry.name) == "Package.swift" {

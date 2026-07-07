@@ -55,7 +55,7 @@ extension Manifest.Resolver {
     /// this method does NOT evaluate a consumer manifest — it only
     /// walks the parent chain expressed by `// parent: <URL>`
     /// directives in `consumerSource`. Use when the consumer's
-    /// configuration is produced by some other mechanism (e.g., a
+    /// configuration is produced by some other mechanism, such as a
     /// Shape γ executable `Lint.swift` whose rule activations are
     /// real Swift witness references, but whose inherited rule set
     /// is still a wire-format `Lint.Manifest` chain).
@@ -84,7 +84,7 @@ extension Manifest.Resolver {
     ///   - consumerPackageRoot: filesystem path to the package whose
     ///     manifest is being resolved.
     ///   - filename: the manifest's filename inside that
-    ///     package root (e.g., `"Lint.swift"`).
+    ///     package root, such as `"Lint.swift"`.
     ///   - dependencies: the SwiftPM dependencies the manifest's
     ///     driver shim compiles against (passed verbatim to
     ///     ``Manifest_Loader/Manifest/load(_:configuration:)`` for
@@ -158,6 +158,7 @@ extension Manifest.Resolver {
 
 extension Manifest.Resolver {
     /// Read a manifest source file's bytes as a UTF-8 string.
+    ///
     /// Returns `nil` on any I/O failure — the caller treats absent
     /// content the same as absent parent directive.
     @inline(__always)
@@ -194,7 +195,11 @@ extension Manifest.Resolver {
                 || urlBytes.starts(with: schemePrefixFile)
         else { return nil }
         let urlString = Swift.String(decoding: urlBytes, as: UTF8.self)
-        return try? URI(urlString)
+        do throws(RFC_3986.Error) {
+            return try URI(urlString)
+        } catch {
+            return nil
+        }
     }
 
 }
@@ -257,7 +262,11 @@ extension Manifest.Resolver {
                     || nextBytes.starts(with: schemePrefixFile)
             {
                 let urlString = Swift.String(decoding: nextBytes, as: UTF8.self)
-                currentURI = try? URI(urlString)
+                do throws(RFC_3986.Error) {
+                    currentURI = try URI(urlString)
+                } catch {
+                    currentURI = nil
+                }
             } else {
                 currentURI = nil
             }
@@ -406,12 +415,16 @@ extension Manifest.Resolver {
         }
 
         // Best-effort cleanup; ignore errors.
-        _ = try? Process.Spawn.run(
-            Process.Spawn.Configuration(
-                executable: "/bin/rm",
-                arguments: ["-f", tempPath.description]
+        do throws(Process.Error) {
+            _ = try Process.Spawn.run(
+                Process.Spawn.Configuration(
+                    executable: "/bin/rm",
+                    arguments: ["-f", tempPath.description]
+                )
             )
-        )
+        } catch {
+            // Best-effort cleanup; ignore failures.
+        }
 
         return content
     }
@@ -453,12 +466,16 @@ extension Manifest.Resolver {
         let tempFilePathString = tempDirectoryString + "/" + filename
 
         // Best-effort mkdir -p; failure surfaces as the subsequent write failure.
-        _ = try? Process.Spawn.run(
-            Process.Spawn.Configuration(
-                executable: "/bin/mkdir",
-                arguments: ["-p", tempDirectoryString]
+        do throws(Process.Error) {
+            _ = try Process.Spawn.run(
+                Process.Spawn.Configuration(
+                    executable: "/bin/mkdir",
+                    arguments: ["-p", tempDirectoryString]
+                )
             )
-        )
+        } catch {
+            // Best-effort; failure surfaces as the subsequent write failure.
+        }
 
         do {
             let filePath = try File.Path(tempFilePathString)

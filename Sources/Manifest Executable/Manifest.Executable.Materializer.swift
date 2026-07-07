@@ -250,7 +250,7 @@ extension Manifest.Executable.Materializer {
         return "\"\(lower)\"..<\"\(upper)\""
     }
 
-    /// Compute the relative prefix (e.g., `"../.."`) from
+    /// Compute the relative prefix, such as `"../.."`, from
     /// `evalRoot` up to `consumerPackageRoot`. Used to rewrite
     /// consumer-relative `.package(path:)` declarations so they
     /// resolve from the eval `Package.swift`'s vantage.
@@ -281,8 +281,8 @@ extension Manifest.Executable.Materializer {
     /// Resolve a consumer-supplied path-form dep into a path
     /// relative to the eval `Package.swift`.
     ///
-    /// `consumerPath` is the literal string the consumer wrote
-    /// (e.g., `"../../swift-foo"`, `"."`, `""`); `root` is the
+    /// `consumerPath` is the literal string the consumer wrote,
+    /// such as `"../../swift-foo"`, `"."`, or `""`; `root` is the
     /// pre-computed relative prefix from
     /// ``relativePrefix(from:to:)``. The result is the path string
     /// the eval `Package.swift` will use.

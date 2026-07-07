@@ -15,7 +15,7 @@ extension Manifest.NestedPackage {
     /// `spawnFailed` is the single shape observed today — the
     /// `swift run --package-path <consumerRoot>/Lint Lint` invocation
     /// could not be started (binary not found, permission denied,
-    /// fork failure, etc.). Subsequent run-time failures of the
+    /// fork failure, and similar). Subsequent run-time failures of the
     /// dispatched executable are surfaced via its exit code, not as
     /// a Swift error.
     public enum Error: Swift.Error, Swift.Sendable {

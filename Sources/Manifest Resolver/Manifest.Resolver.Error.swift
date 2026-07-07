@@ -34,7 +34,7 @@ extension Manifest.Resolver {
         case parentChainCycle(visited: [URI], at: URI)
 
         /// The parent chain exceeded the depth-16 sanity backstop
-        /// without revisiting any URI (i.e., not a cycle).
+        /// without revisiting any URI — that is, not a cycle.
         case parentChainTooDeep(depth: Swift.Int)
     }
 }
