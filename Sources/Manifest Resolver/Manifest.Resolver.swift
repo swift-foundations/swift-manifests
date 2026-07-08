@@ -111,7 +111,7 @@ extension Manifest.Resolver {
     ) throws(Manifest.Resolver<M, C>.Error) -> C {
         // Step 1: load consumer manifest. Silent fall-back to defaults on any failure.
         let consumerManifest: M
-        do {
+        do throws(Manifest.Error) {
             consumerManifest = try Manifest.load(
                 M.self,
                 from: consumerPackageRoot,
@@ -352,7 +352,7 @@ extension Manifest.Resolver {
         _ uri: URI
     ) throws(Manifest.Resolver<M, C>.Error) -> Swift.String {
         let tempPath: File.Path
-        do {
+        do throws(File.Path.Error) {
             tempPath = try File.Path.Temporary.deterministic(
                 prefix: "swift-manifests-fetch-",
                 key: uri.value,
@@ -372,7 +372,7 @@ extension Manifest.Resolver {
         )
 
         let status: Process.Status
-        do {
+        do throws(Process.Error) {
             status = try Process.Spawn.run(configuration).status
         } catch {
             throw .parentFetchFailed(
@@ -397,7 +397,7 @@ extension Manifest.Resolver {
         }
 
         let content: Swift.String
-        do {
+        do throws(File.System.Read.Full.Error) {
             let bytes: [Byte] = try File(tempPath).read.full {
                 (span: Swift.Span<Byte>) -> [Byte] in
                 var array: [Byte] = []
@@ -449,7 +449,7 @@ extension Manifest.Resolver {
         dependencies: [Manifest.Dependency]
     ) throws(Manifest.Resolver<M, C>.Error) -> M {
         let tempDirectory: File.Path
-        do {
+        do throws(File.Path.Error) {
             tempDirectory = try File.Path.Temporary.deterministic(
                 prefix: "swift-manifests-parent-eval-",
                 key: uri.value,
@@ -488,7 +488,7 @@ extension Manifest.Resolver {
             )
         }
 
-        do {
+        do throws(Manifest.Error) {
             return try Manifest.load(
                 M.self,
                 from: tempDirectoryString,
