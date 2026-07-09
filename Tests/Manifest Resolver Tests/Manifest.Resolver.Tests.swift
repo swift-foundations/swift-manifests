@@ -15,8 +15,8 @@ import URI_Standard
 
 @testable import Manifest_Resolver
 
-@Suite("Manifest.Resolver")
-struct ManifestResolverTests {
+@Suite
+struct `Manifest.Resolver Tests` {
     /// A minimal `C` shape for testing the resolver's fold semantics
     /// without depending on a real lint configuration type.
     struct Configuration: Sendable, Equatable {
