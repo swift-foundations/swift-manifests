@@ -23,8 +23,8 @@ struct ManifestResolverTests {
         let value: Swift.Int
     }
 
-    @Test("Non-existent package root falls back to defaultConfiguration")
-    func nonExistentRootFallsBackToDefault() throws {
+    @Test
+    func `Non-existent package root falls back to defaultConfiguration`() throws {
         let result = try Manifest.Resolver<Swift.Int, Configuration>.resolve(
             consumerPackageRoot: "/nonexistent/path/that/should/not/exist",
             filename: "Lint.swift",
@@ -39,8 +39,8 @@ struct ManifestResolverTests {
 
     // MARK: - fetch() — file:// scheme
 
-    @Test("fetch reads file:// URI content from an existing file")
-    func fetchReadsFileURIContent() throws {
+    @Test
+    func `fetch reads file:// URI content from an existing file`() throws {
         let path = try File.Path.Temporary.deterministic(
             prefix: "swift-manifests-resolver-test-",
             key: "fetchReadsFileURIContent",
@@ -56,8 +56,8 @@ struct ManifestResolverTests {
         #expect(read == content)
     }
 
-    @Test("fetch throws parentFetchFailed for a non-existent file:// URI")
-    func fetchThrowsForMissingFile() throws {
+    @Test
+    func `fetch throws parentFetchFailed for a non-existent file:// URI`() throws {
         let path = try File.Path.Temporary.deterministic(
             prefix: "swift-manifests-resolver-test-",
             key: "fetchThrowsForMissingFile-DOES-NOT-EXIST",
@@ -68,10 +68,10 @@ struct ManifestResolverTests {
 
         let uri = try URI("file://" + path.description)
         var memo: [URI: Swift.String] = [:]
-        do {
+        do throws(Manifest.Resolver<Swift.Int, Configuration>.Error) {
             _ = try Manifest.Resolver<Swift.Int, Configuration>.fetch(uri, memo: &memo)
             Issue.record("expected fetch to throw .parentFetchFailed for missing file://")
-        } catch let error {
+        } catch {
             switch error {
             case .parentFetchFailed(let url, _, _):
                 #expect(url == uri)
@@ -82,8 +82,8 @@ struct ManifestResolverTests {
         }
     }
 
-    @Test("fetch memoizes successive calls for the same URI (per-process)")
-    func fetchMemoizesSameURI() throws {
+    @Test
+    func `fetch memoizes successive calls for the same URI (per-process)`() throws {
         let path = try File.Path.Temporary.deterministic(
             prefix: "swift-manifests-resolver-test-",
             key: "fetchMemoizesSameURI",
