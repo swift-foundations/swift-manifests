@@ -16,9 +16,9 @@ import Testing
 
 extension Manifest.Executable {
     @Suite struct Test {
-        @Suite struct RelativePrefix {}
-        @Suite struct Resolve {}
-        @Suite struct RenderPackageSwift {}
+        @Suite struct `Relative Prefix` {}
+        @Suite struct `Resolve` {}
+        @Suite struct `Render Package Swift` {}
     }
 }
 

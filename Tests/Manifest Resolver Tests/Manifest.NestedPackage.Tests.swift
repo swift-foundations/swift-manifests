@@ -14,7 +14,7 @@ import Testing
 @testable import Manifest_Resolver
 
 extension Manifest.NestedPackage {
-    @Suite("Manifest.NestedPackage") struct Test {
+    @Suite struct Test {
         /// Detection MUST return `true` against the swift-tagged-primitives
         /// reference fixture — the consumer that the architecture cohort
         /// Phase A PoC authors a `Lint/` nested package for. This test
