@@ -24,7 +24,7 @@ extension Manifest.Executable {
 
 // MARK: - relativePrefix
 
-extension Manifest.Executable.Test.RelativePrefix {
+extension Manifest.Executable.Test.`Relative Prefix` {
     @Test
     func `descendant evalRoot returns one dotdot per extra segment`() throws {
         let consumer: File.Path = try File.Path("/tmp/swift-foo")
@@ -91,7 +91,7 @@ extension Manifest.Executable.Test.Resolve {
 
 // MARK: - renderPackageSwift
 
-extension Manifest.Executable.Test.RenderPackageSwift {
+extension Manifest.Executable.Test.`Render Package Swift` {
     @Test
     func `minimal Configuration emits well-formed Package_swift`() throws {
         let configuration = try Self.makeFixtureConfiguration()
@@ -220,7 +220,7 @@ extension Manifest.Executable.Test.RenderPackageSwift {
     }
 }
 
-extension Manifest.Executable.Test.RenderPackageSwift {
+extension Manifest.Executable.Test.`Render Package Swift` {
     /// Lint-shaped fixture Configuration: consumer at `/tmp/swift-foo`,
     /// eval at `/tmp/swift-foo/.swift-lint/eval`, one path-form dep
     /// matching the consumer-side `"../../swift-primitives-linter-rules"`
