@@ -94,6 +94,7 @@ let package = Package(
             dependencies: [
                 "Manifest Loader",
                 "Manifests Test Support",
+                .product(name: "File System", package: "swift-file-system"),
             ]
         ),
         .testTarget(
