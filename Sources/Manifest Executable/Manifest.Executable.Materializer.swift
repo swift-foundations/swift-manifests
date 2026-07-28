@@ -338,7 +338,7 @@ extension Manifest.Executable.Materializer {
         at path: File.Path
     ) throws(Manifest.Executable.Error) -> Swift.String {
         let bytes: [Byte]
-        do throws(File.System.Read.Full.Error) {
+        do throws(Either<File.System.Read.Full.Error, Never>) {
             bytes = try File(path).read.full { (span: Swift.Span<Byte>) -> [Byte] in
                 var array: [Byte] = []
                 array.reserveCapacity(span.count)
@@ -348,7 +348,7 @@ extension Manifest.Executable.Materializer {
                 return array
             }
         } catch {
-            throw .readFailed(path: path, description: "\(error)")
+            throw .readFailed(path: path, description: "\(error.value)")
         }
         return Swift.String(decoding: bytes, as: UTF8.self)
     }

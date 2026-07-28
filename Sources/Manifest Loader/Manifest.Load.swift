@@ -185,7 +185,7 @@ extension Manifest {
             throw .outputCaptureFailed(reason: "invalid path \(absolutePath): \(error)")
         }
         let bytes: [Byte]
-        do throws(File.System.Read.Full.Error) {
+        do throws(Either<File.System.Read.Full.Error, Never>) {
             bytes = try File(path).read.full { (span: Swift.Span<Byte>) -> [Byte] in
                 var array: [Byte] = []
                 array.reserveCapacity(span.count)
@@ -195,7 +195,7 @@ extension Manifest {
                 return array
             }
         } catch {
-            throw .outputCaptureFailed(reason: "read \(absolutePath): \(error)")
+            throw .outputCaptureFailed(reason: "read \(absolutePath): \(error.value)")
         }
         return Swift.String(decoding: bytes, as: UTF8.self)
     }

@@ -397,7 +397,7 @@ extension Manifest.Resolver {
         }
 
         let content: Swift.String
-        do throws(File.System.Read.Full.Error) {
+        do throws(Either<File.System.Read.Full.Error, Never>) {
             let bytes: [Byte] = try File(tempPath).read.full {
                 (span: Swift.Span<Byte>) -> [Byte] in
                 var array: [Byte] = []
@@ -410,7 +410,7 @@ extension Manifest.Resolver {
             throw .parentFetchFailed(
                 url: uri,
                 exitCode: 0,
-                stderr: "read temp: \(error)"
+                stderr: "read temp: \(error.value)"
             )
         }
 
