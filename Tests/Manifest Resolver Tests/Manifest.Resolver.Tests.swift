@@ -17,28 +17,36 @@ import URI_Standard
 
 @Suite
 struct `Manifest.Resolver Tests` {
+    @Suite struct Unit {}
+    @Suite struct `Edge Case` {}
+    @Suite struct Integration {}
+
     /// A minimal `C` shape for testing the resolver's fold semantics
     /// without depending on a real lint configuration type.
     struct Configuration: Sendable, Equatable {
         let value: Swift.Int
     }
+}
 
+extension `Manifest.Resolver Tests`.Unit {
     @Test
     func `Non-existent package root falls back to defaultConfiguration`() throws {
-        let result = try Manifest.Resolver<Swift.Int, Configuration>.resolve(
+        let result = try Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>.resolve(
             consumerPackageRoot: "/nonexistent/path/that/should/not/exist",
             filename: "Lint.swift",
             dependencies: [],
-            defaultConfiguration: { Configuration(value: 999) },
+            defaultConfiguration: { `Manifest.Resolver Tests`.Configuration(value: 999) },
             buildConfiguration: { manifest, _ in
-                Configuration(value: manifest)
+                `Manifest.Resolver Tests`.Configuration(value: manifest)
             }
         )
-        #expect(result == Configuration(value: 999))
+        #expect(result == `Manifest.Resolver Tests`.Configuration(value: 999))
     }
+}
 
-    // MARK: - fetch() — file:// scheme
+// MARK: - fetch() — file:// scheme
 
+extension `Manifest.Resolver Tests`.Integration {
     @Test
     func `fetch reads file:// URI content from an existing file`() throws {
         let path = try File.Path.Temporary.deterministic(
@@ -46,40 +54,18 @@ struct `Manifest.Resolver Tests` {
             key: "fetchReadsFileURIContent",
             suffix: ".txt"
         )
-        defer { try? File.System.Delete.delete(at: path) }
+        defer {
+            // swift-linter:disable:next try optional
+            // REASON: File.System.Delete.delete(at:) failure here is best-effort cleanup.
+            try? File.System.Delete.delete(at: path)
+        }
         let content = "// parent: file:///nowhere\nlet manifest: Int = 42\n"
         try File(path).write.atomic(content)
 
         let uri = try URI("file://" + path.description)
         var memo: [URI: Swift.String] = [:]
-        let read = try Manifest.Resolver<Swift.Int, Configuration>.fetch(uri, memo: &memo)
+        let read = try Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>.fetch(uri, memo: &memo)
         #expect(read == content)
-    }
-
-    @Test
-    func `fetch throws parentFetchFailed for a non-existent file:// URI`() throws {
-        let path = try File.Path.Temporary.deterministic(
-            prefix: "swift-manifests-resolver-test-",
-            key: "fetchThrowsForMissingFile-DOES-NOT-EXIST",
-            suffix: ".txt"
-        )
-        // Best-effort cleanup in case a prior test run left a stray.
-        try? File.System.Delete.delete(at: path)
-
-        let uri = try URI("file://" + path.description)
-        var memo: [URI: Swift.String] = [:]
-        do throws(Manifest.Resolver<Swift.Int, Configuration>.Error) {
-            _ = try Manifest.Resolver<Swift.Int, Configuration>.fetch(uri, memo: &memo)
-            Issue.record("expected fetch to throw .parentFetchFailed for missing file://")
-        } catch {
-            switch error {
-            case .parentFetchFailed(let url, _, _):
-                #expect(url == uri)
-
-            default:
-                Issue.record("unexpected error: \(error)")
-            }
-        }
     }
 
     @Test
@@ -89,7 +75,11 @@ struct `Manifest.Resolver Tests` {
             key: "fetchMemoizesSameURI",
             suffix: ".txt"
         )
-        defer { try? File.System.Delete.delete(at: path) }
+        defer {
+            // swift-linter:disable:next try optional
+            // REASON: File.System.Delete.delete(at:) failure here is best-effort cleanup.
+            try? File.System.Delete.delete(at: path)
+        }
         let content = "let manifest: Int = 7\n"
         try File(path).write.atomic(content)
 
@@ -97,7 +87,7 @@ struct `Manifest.Resolver Tests` {
         var memo: [URI: Swift.String] = [:]
 
         // First fetch — populates memo.
-        let first = try Manifest.Resolver<Swift.Int, Configuration>.fetch(uri, memo: &memo)
+        let first = try Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>.fetch(uri, memo: &memo)
         #expect(first == content)
         #expect(memo[uri] == content)
         #expect(memo.count == 1)
@@ -108,8 +98,38 @@ struct `Manifest.Resolver Tests` {
         try File(path).write.atomic(mutated)
 
         // Second fetch — must return memoized content, NOT the new bytes.
-        let second = try Manifest.Resolver<Swift.Int, Configuration>.fetch(uri, memo: &memo)
+        let second = try Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>.fetch(uri, memo: &memo)
         #expect(second == content)
         #expect(memo.count == 1)
+    }
+}
+
+extension `Manifest.Resolver Tests`.`Edge Case` {
+    @Test
+    func `fetch throws parentFetchFailed for a non-existent file:// URI`() throws {
+        let path = try File.Path.Temporary.deterministic(
+            prefix: "swift-manifests-resolver-test-",
+            key: "fetchThrowsForMissingFile-DOES-NOT-EXIST",
+            suffix: ".txt"
+        )
+        // Best-effort cleanup in case a prior test run left a stray.
+        do throws(File.System.Delete.Error) {
+            try File.System.Delete.delete(at: path)
+        } catch {}
+
+        let uri = try URI("file://" + path.description)
+        var memo: [URI: Swift.String] = [:]
+        do throws(Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>.Error) {
+            _ = try Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>.fetch(uri, memo: &memo)
+            Issue.record("expected fetch to throw .parentFetchFailed for missing file://")
+        } catch {
+            switch error {
+            case .parentFetchFailed(let url, _, _):
+                #expect(url == uri)
+
+            default:
+                Issue.record("unexpected error: \(error)")
+            }
+        }
     }
 }
