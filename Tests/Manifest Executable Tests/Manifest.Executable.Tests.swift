@@ -145,7 +145,11 @@ extension Manifest.Executable.Test.`Render Package Swift` {
         let rendered: Swift.String = try Manifest.Executable.Materializer.renderPackageSwift(
             configuration: configuration
         )
-        #expect(rendered.contains(".package(url: \"https://github.com/apple/swift-argument-parser.git\", from: \"1.5.0\")"))
+        #expect(
+            rendered.contains(
+                ".package(url: \"https://github.com/apple/swift-argument-parser.git\", from: \"1.5.0\")"
+            )
+        )
     }
 
     @Test
@@ -172,7 +176,11 @@ extension Manifest.Executable.Test.`Render Package Swift` {
         let rendered: Swift.String = try Manifest.Executable.Materializer.renderPackageSwift(
             configuration: configuration
         )
-        #expect(rendered.contains(".package(url: \"https://github.com/swiftlang/swift-syntax.git\", \"602.0.0\"..<\"603.0.0\")"))
+        #expect(
+            rendered.contains(
+                ".package(url: \"https://github.com/swiftlang/swift-syntax.git\", \"602.0.0\"..<\"603.0.0\")"
+            )
+        )
     }
 
     @Test
@@ -213,10 +221,16 @@ extension Manifest.Executable.Test.`Render Package Swift` {
         let rendered: Swift.String = try Manifest.Executable.Materializer.renderPackageSwift(
             configuration: configuration
         )
-        #expect(rendered.contains("for target in package.targets where ![.system, .binary, .plugin, .macro].contains(target.type) {"))
+        #expect(
+            rendered.contains(
+                "for target in package.targets where ![.system, .binary, .plugin, .macro].contains(target.type) {"
+            )
+        )
         #expect(rendered.contains(".enableUpcomingFeature(\"ExistentialAny\"),"))
         #expect(rendered.contains(".enableUpcomingFeature(\"MemberImportVisibility\"),"))
-        #expect(rendered.contains("target.swiftSettings = (target.swiftSettings ?? []) + ecosystem"))
+        #expect(
+            rendered.contains("target.swiftSettings = (target.swiftSettings ?? []) + ecosystem")
+        )
     }
 }
 

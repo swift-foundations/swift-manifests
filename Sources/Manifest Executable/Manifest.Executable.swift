@@ -71,7 +71,10 @@ extension Manifest.Executable {
         try Self.Materializer.materialize(configuration: configuration)
 
         let invocation: [Swift.String] =
-            ["swift", "run", "--package-path", configuration.evalRoot.string, configuration.executableName]
+            [
+                "swift", "run", "--package-path", configuration.evalRoot.string,
+                configuration.executableName,
+            ]
             + configuration.arguments
         let spawnConfiguration = Process.Spawn.Configuration(
             executable: "/usr/bin/env",
