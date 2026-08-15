@@ -46,7 +46,9 @@ extension Manifest.Executable.Materializer {
         let sourcesParentDirectory: File.Path = configuration.evalRoot / "Sources"
         let executableSourceDirectory: File.Path
         do throws(Paths.Path.Component.Error) {
-            executableSourceDirectory = try sourcesParentDirectory.appending(configuration.executableName)
+            executableSourceDirectory = try sourcesParentDirectory.appending(
+                configuration.executableName
+            )
         } catch {
             throw .materializationFailed(
                 reason: "invalid executable name `\(configuration.executableName)`: \(error)"
@@ -114,7 +116,10 @@ extension Manifest.Executable.Materializer {
         for dep in configuration.dependencies {
             switch dep.source {
             case .path(let path):
-                let resolvedPath: Swift.String = try Self.resolve(path, relativeTo: evalRelativeToConsumer)
+                let resolvedPath: Swift.String = try Self.resolve(
+                    path,
+                    relativeTo: evalRelativeToConsumer
+                )
                 lines.append("        .package(path: \"\(resolvedPath)\"),")
 
             case .url(let url, let requirement):
@@ -135,7 +140,9 @@ extension Manifest.Executable.Materializer {
 
         for dep in configuration.dependencies {
             for product in dep.products {
-                lines.append("                .product(name: \"\(product)\", package: \"\(dep.name)\"),")
+                lines.append(
+                    "                .product(name: \"\(product)\", package: \"\(dep.name)\"),"
+                )
             }
         }
 
@@ -151,7 +158,9 @@ extension Manifest.Executable.Materializer {
         lines.append("")
 
         if let ecosystem: [Swift.String] = configuration.ecosystemSettings, !ecosystem.isEmpty {
-            lines.append("for target in package.targets where ![.system, .binary, .plugin, .macro].contains(target.type) {")
+            lines.append(
+                "for target in package.targets where ![.system, .binary, .plugin, .macro].contains(target.type) {"
+            )
             lines.append("    let ecosystem: [SwiftSetting] = [")
             for setting in ecosystem {
                 lines.append("        \(setting),")
@@ -307,7 +316,8 @@ extension Manifest.Executable.Materializer {
             base = try File.Path(root)
         } catch {
             throw .materializationFailed(
-                reason: "invalid SwiftPM path-form dep `\(consumerPath)` (relative to `\(root)`): \(error)"
+                reason:
+                    "invalid SwiftPM path-form dep `\(consumerPath)` (relative to `\(root)`): \(error)"
             )
         }
         return base.appending(consumer).string

@@ -31,15 +31,16 @@ struct `Manifest.Resolver Tests` {
 extension `Manifest.Resolver Tests`.Unit {
     @Test
     func `Non-existent package root falls back to defaultConfiguration`() throws {
-        let result = try Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>.resolve(
-            consumerPackageRoot: "/nonexistent/path/that/should/not/exist",
-            filename: "Lint.swift",
-            dependencies: [],
-            defaultConfiguration: { `Manifest.Resolver Tests`.Configuration(value: 999) },
-            buildConfiguration: { manifest, _ in
-                `Manifest.Resolver Tests`.Configuration(value: manifest)
-            }
-        )
+        let result = try Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>
+            .resolve(
+                consumerPackageRoot: "/nonexistent/path/that/should/not/exist",
+                filename: "Lint.swift",
+                dependencies: [],
+                defaultConfiguration: { `Manifest.Resolver Tests`.Configuration(value: 999) },
+                buildConfiguration: { manifest, _ in
+                    `Manifest.Resolver Tests`.Configuration(value: manifest)
+                }
+            )
         #expect(result == `Manifest.Resolver Tests`.Configuration(value: 999))
     }
 }
@@ -64,7 +65,10 @@ extension `Manifest.Resolver Tests`.Integration {
 
         let uri = try URI("file://" + path.description)
         var memo: [URI: Swift.String] = [:]
-        let read = try Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>.fetch(uri, memo: &memo)
+        let read = try Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>.fetch(
+            uri,
+            memo: &memo
+        )
         #expect(read == content)
     }
 
@@ -87,7 +91,10 @@ extension `Manifest.Resolver Tests`.Integration {
         var memo: [URI: Swift.String] = [:]
 
         // First fetch — populates memo.
-        let first = try Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>.fetch(uri, memo: &memo)
+        let first = try Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>.fetch(
+            uri,
+            memo: &memo
+        )
         #expect(first == content)
         #expect(memo[uri] == content)
         #expect(memo.count == 1)
@@ -98,7 +105,8 @@ extension `Manifest.Resolver Tests`.Integration {
         try File(path).write.atomic(mutated)
 
         // Second fetch — must return memoized content, NOT the new bytes.
-        let second = try Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>.fetch(uri, memo: &memo)
+        let second = try Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>
+            .fetch(uri, memo: &memo)
         #expect(second == content)
         #expect(memo.count == 1)
     }
@@ -120,7 +128,10 @@ extension `Manifest.Resolver Tests`.`Edge Case` {
         let uri = try URI("file://" + path.description)
         var memo: [URI: Swift.String] = [:]
         do throws(Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>.Error) {
-            _ = try Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>.fetch(uri, memo: &memo)
+            _ = try Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>.fetch(
+                uri,
+                memo: &memo
+            )
             Issue.record("expected fetch to throw .parentFetchFailed for missing file://")
         } catch {
             switch error {
