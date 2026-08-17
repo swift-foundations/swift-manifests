@@ -14,12 +14,6 @@ import Testing
 
 @testable import Manifest_Loader
 
-#if canImport(Darwin)
-    import Darwin
-#elseif canImport(Glibc)
-    import Glibc
-#endif
-
 extension Manifest {
     @Suite struct Test {
         @Suite(.serialized) struct Integration {}
@@ -79,7 +73,11 @@ extension Manifest.Test.Integration {
             return
         }
 
-        let fixtureRoot = "/tmp/swift-manifest-e2e-\(getpid())"
+        // A random suffix rather than `getpid()`: the pid spelling needs a
+        // per-platform libc import (`Darwin`/`Glibc`/`CRT`), and the missing
+        // Windows branch made this file the one compile error on that leg.
+        // Uniqueness of the fixture directory is the only requirement.
+        let fixtureRoot = "/tmp/swift-manifest-e2e-\(Swift.UInt64.random(in: .min ... .max))"
         try Manifest._createDirectoryRecursive(at: fixtureRoot)
 
         try Manifest._writeAtomic(
