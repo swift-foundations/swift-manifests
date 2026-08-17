@@ -320,7 +320,17 @@ extension Manifest.Executable.Materializer {
                     "invalid SwiftPM path-form dep `\(consumerPath)` (relative to `\(root)`): \(error)"
             )
         }
-        return base.appending(consumer).string
+        let joined: Swift.String = base.appending(consumer).string
+        #if os(Windows)
+            // The result is rendered into a Swift string literal inside the
+            // eval `Package.swift`, where a backslash is an escape character,
+            // and SwiftPM's `.package(path:)` accepts forward slashes on
+            // every platform. `File.Path.string` uses the native separator,
+            // so re-render it in the manifest's portable spelling.
+            return Swift.String(joined.map { $0 == "\\" ? "/" : $0 })
+        #else
+            return joined
+        #endif
     }
 
     fileprivate static func createDirectoryRecursive(
