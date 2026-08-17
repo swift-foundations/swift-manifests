@@ -26,6 +26,22 @@ struct `Manifest.Resolver Tests` {
     struct Configuration: Sendable, Equatable {
         let value: Swift.Int
     }
+
+    /// Renders `path` as a `file://` URI string. On Windows the native
+    /// spelling is `C:\...`; RFC 8089 requires forward slashes and a
+    /// slash before the drive letter (`file:///C:/...`). Elsewhere the
+    /// native spelling is already the URI path.
+    static func fileURIString(of path: File.Path) -> Swift.String {
+        #if os(Windows)
+            var uriPath = Swift.String(path.description.map { $0 == "\\" ? "/" : $0 })
+            if !uriPath.hasPrefix("/") {
+                uriPath = "/" + uriPath
+            }
+            return "file://" + uriPath
+        #else
+            return "file://" + path.description
+        #endif
+    }
 }
 
 extension `Manifest.Resolver Tests`.Unit {
@@ -63,7 +79,7 @@ extension `Manifest.Resolver Tests`.Integration {
         let content = "// parent: file:///nowhere\nlet manifest: Int = 42\n"
         try File(path).write.atomic(content)
 
-        let uri = try URI("file://" + path.description)
+        let uri = try URI(`Manifest.Resolver Tests`.fileURIString(of: path))
         var memo: [URI: Swift.String] = [:]
         let read = try Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>.fetch(
             uri,
@@ -87,7 +103,7 @@ extension `Manifest.Resolver Tests`.Integration {
         let content = "let manifest: Int = 7\n"
         try File(path).write.atomic(content)
 
-        let uri = try URI("file://" + path.description)
+        let uri = try URI(`Manifest.Resolver Tests`.fileURIString(of: path))
         var memo: [URI: Swift.String] = [:]
 
         // First fetch — populates memo.
@@ -125,7 +141,7 @@ extension `Manifest.Resolver Tests`.`Edge Case` {
             try File.System.Delete.delete(at: path)
         } catch {}
 
-        let uri = try URI("file://" + path.description)
+        let uri = try URI(`Manifest.Resolver Tests`.fileURIString(of: path))
         var memo: [URI: Swift.String] = [:]
         do throws(Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>.Error) {
             _ = try Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>.fetch(

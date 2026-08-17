@@ -325,7 +325,20 @@ extension Manifest.Resolver {
         }
         let pathString: Swift.String
         if uriPath.isAbsolute {
-            pathString = "/" + uriPath.segments.joined(separator: "/")
+            #if os(Windows)
+                // RFC 8089: in `file:///C:/...` the slash before the drive
+                // letter is URI syntax, not part of the Windows-native path.
+                if let first = uriPath.segments.first,
+                    first.count == 2,
+                    first.hasSuffix(":")
+                {
+                    pathString = uriPath.segments.joined(separator: "/")
+                } else {
+                    pathString = "/" + uriPath.segments.joined(separator: "/")
+                }
+            #else
+                pathString = "/" + uriPath.segments.joined(separator: "/")
+            #endif
         } else {
             pathString = uriPath.segments.joined(separator: "/")
         }

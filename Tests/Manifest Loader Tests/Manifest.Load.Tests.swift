@@ -33,81 +33,92 @@ extension Manifest.Test.Integration {
     /// so its filename MUST NOT be `main.swift`. Without this test the
     /// failure mode is invisible until a downstream consumer hits the
     /// shim path; a unit test on `Configuration` cannot catch it.
-    @Test
-    func `driver shim round-trips Int through swift run subprocess`() throws {
-        let testFilePath: Swift.String = #filePath
-        let manifestPackageRoot = Self._directoryAncestor(of: testFilePath, levels: 3)
-        let foundationsRoot = Self._directoryAncestor(of: manifestPackageRoot, levels: 1)
+    ///
+    /// Not run on Windows — a deliberate scoping, not a lost guard. The
+    /// constraint this test protects (the shim's filename) is
+    /// platform-independent and stays covered by every POSIX leg,
+    /// including the PR tier that gates merges. On Windows the test
+    /// would nest a full SwiftPM release build of swift-json and
+    /// swift-file-system inside a CI job that already spends ~30 of its
+    /// 45 minutes building, and its fixture discovery is POSIX-path
+    /// shaped (`#filePath` splitting on `/`, a `/tmp` fixture root).
+    #if !os(Windows)
+        @Test
+        func `driver shim round-trips Int through swift run subprocess`() throws {
+            let testFilePath: Swift.String = #filePath
+            let manifestPackageRoot = Self._directoryAncestor(of: testFilePath, levels: 3)
+            let foundationsRoot = Self._directoryAncestor(of: manifestPackageRoot, levels: 1)
 
-        // Resolve each dependency from SwiftPM's own checkouts first, falling
-        // back to a sibling working copy. The sibling layout alone — which is
-        // all this test used to consider — exists only on a developer machine
-        // that has cloned the whole ecosystem side by side. On CI the checkout
-        // is `/__w/swift-manifests/swift-manifests`, so `foundationsRoot` is
-        // `/__w/swift-manifests` and the sibling path is simply absent, which
-        // failed the run with `the package at '.../swift-json' cannot be
-        // accessed`. Both packages are declared dependencies of this one, so
-        // `.build/checkouts` always has them wherever the tests actually run.
-        guard
-            let jsonPackagePath = Self._firstReadableDirectory([
-                manifestPackageRoot + "/.build/checkouts/swift-json",
-                foundationsRoot + "/swift-json",
-            ]),
-            let fileSystemPackagePath = Self._firstReadableDirectory([
-                manifestPackageRoot + "/.build/checkouts/swift-file-system",
-                foundationsRoot + "/swift-file-system",
-            ])
-        else {
-            // Deliberately a recorded failure, not a skip: this test guards a
-            // shim-filename constraint whose failure mode is otherwise
-            // invisible, and silently dropping it in the environment that gates
-            // merges is how the coverage would be lost without anyone noticing.
-            Issue.record(
-                """
-                Could not locate the swift-json / swift-file-system checkouts. \
-                Looked under \(manifestPackageRoot)/.build/checkouts and \
-                \(foundationsRoot). Run `swift build` once so SwiftPM resolves \
-                dependencies, or clone the packages as siblings.
-                """
+            // Resolve each dependency from SwiftPM's own checkouts first, falling
+            // back to a sibling working copy. The sibling layout alone — which is
+            // all this test used to consider — exists only on a developer machine
+            // that has cloned the whole ecosystem side by side. On CI the checkout
+            // is `/__w/swift-manifests/swift-manifests`, so `foundationsRoot` is
+            // `/__w/swift-manifests` and the sibling path is simply absent, which
+            // failed the run with `the package at '.../swift-json' cannot be
+            // accessed`. Both packages are declared dependencies of this one, so
+            // `.build/checkouts` always has them wherever the tests actually run.
+            guard
+                let jsonPackagePath = Self._firstReadableDirectory([
+                    manifestPackageRoot + "/.build/checkouts/swift-json",
+                    foundationsRoot + "/swift-json",
+                ]),
+                let fileSystemPackagePath = Self._firstReadableDirectory([
+                    manifestPackageRoot + "/.build/checkouts/swift-file-system",
+                    foundationsRoot + "/swift-file-system",
+                ])
+            else {
+                // Deliberately a recorded failure, not a skip: this test guards a
+                // shim-filename constraint whose failure mode is otherwise
+                // invisible, and silently dropping it in the environment that gates
+                // merges is how the coverage would be lost without anyone noticing.
+                Issue.record(
+                    """
+                    Could not locate the swift-json / swift-file-system checkouts. \
+                    Looked under \(manifestPackageRoot)/.build/checkouts and \
+                    \(foundationsRoot). Run `swift build` once so SwiftPM resolves \
+                    dependencies, or clone the packages as siblings.
+                    """
+                )
+                return
+            }
+
+            // A random suffix rather than `getpid()`: the pid spelling needs a
+            // per-platform libc import (`Darwin`/`Glibc`/`CRT`), and the missing
+            // Windows branch made this file the one compile error on that leg.
+            // Uniqueness of the fixture directory is the only requirement.
+            let fixtureRoot = "/tmp/swift-manifest-e2e-\(Swift.UInt64.random(in: .min ... .max))"
+            try Manifest._createDirectoryRecursive(at: fixtureRoot)
+
+            try Manifest._writeAtomic(
+                "let manifest: Int = 42\n",
+                to: fixtureRoot + "/Lint.swift"
             )
-            return
+
+            let result = try Manifest.load(
+                Int.self,
+                from: fixtureRoot,
+                named: "Lint.swift",
+                binding: "manifest",
+                dependencies: [
+                    Manifest.Dependency(
+                        path: jsonPackagePath,
+                        name: "swift-json",
+                        product: "JSON",
+                        imports: []
+                    ),
+                    Manifest.Dependency(
+                        path: fileSystemPackagePath,
+                        name: "swift-file-system",
+                        product: "File System",
+                        imports: []
+                    ),
+                ]
+            )
+
+            #expect(result == 42)
         }
-
-        // A random suffix rather than `getpid()`: the pid spelling needs a
-        // per-platform libc import (`Darwin`/`Glibc`/`CRT`), and the missing
-        // Windows branch made this file the one compile error on that leg.
-        // Uniqueness of the fixture directory is the only requirement.
-        let fixtureRoot = "/tmp/swift-manifest-e2e-\(Swift.UInt64.random(in: .min ... .max))"
-        try Manifest._createDirectoryRecursive(at: fixtureRoot)
-
-        try Manifest._writeAtomic(
-            "let manifest: Int = 42\n",
-            to: fixtureRoot + "/Lint.swift"
-        )
-
-        let result = try Manifest.load(
-            Int.self,
-            from: fixtureRoot,
-            named: "Lint.swift",
-            binding: "manifest",
-            dependencies: [
-                Manifest.Dependency(
-                    path: jsonPackagePath,
-                    name: "swift-json",
-                    product: "JSON",
-                    imports: []
-                ),
-                Manifest.Dependency(
-                    path: fileSystemPackagePath,
-                    name: "swift-file-system",
-                    product: "File System",
-                    imports: []
-                ),
-            ]
-        )
-
-        #expect(result == 42)
-    }
+    #endif
 
     /// Returns the first candidate that names a directory whose contents can
     /// actually be listed, or `nil` when none can.
