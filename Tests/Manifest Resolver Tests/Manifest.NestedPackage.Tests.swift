@@ -58,7 +58,7 @@ extension Manifest.NestedPackage {
             let lintDirectory = root / "Lint"
             try File.System.Create.Directory.create(at: lintDirectory, createIntermediates: true)
             try File(lintDirectory / "Package.swift").write.atomic(
-                "// swift-tools-version: 6.3.3\n"
+                "// swift-tools-version: 6.4\n"
             )
 
             #expect(Manifest.NestedPackage.detect(at: root.string) == true)

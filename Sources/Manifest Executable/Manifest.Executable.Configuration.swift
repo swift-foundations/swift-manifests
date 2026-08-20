@@ -69,7 +69,7 @@ extension Manifest.Executable {
         /// `Package(platforms:)` array.
         ///
         /// Each entry is a raw PackageDescription token like
-        /// `".macOS(.v26)"`. The generic emits them verbatim;
+        /// `".macOS(.v27)"`. The generic emits them verbatim;
         /// validation is consumer-side.
         public let platforms: [Swift.String]
 
