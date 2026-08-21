@@ -1,16 +1,5 @@
 // swift-tools-version: 6.4
 
-// ===----------------------------------------------------------------------===//
-//
-// This source file is part of the swift-manifests open source project
-//
-// Copyright (c) 2026 Coen ten Thije Boonkkamp and the swift-manifests project authors
-// Licensed under Apache License v2.0
-//
-// See LICENSE for license information
-//
-// ===----------------------------------------------------------------------===//
-
 import PackageDescription
 
 let package = Package(
@@ -40,7 +29,7 @@ let package = Package(
         .package(url: "https://github.com/swift-foundations/swift-strings.git", branch: "main"),
     ],
     targets: [
-        // MARK: - Manifest Loader
+
         .target(
             name: "Manifest Loader",
             dependencies: [
@@ -53,7 +42,6 @@ let package = Package(
             ]
         ),
 
-        // MARK: - Manifest Resolver
         .target(
             name: "Manifest Resolver",
             dependencies: [
@@ -65,7 +53,6 @@ let package = Package(
             ]
         ),
 
-        // MARK: - Manifest Executable
         .target(
             name: "Manifest Executable",
             dependencies: [
@@ -77,7 +64,6 @@ let package = Package(
             ]
         ),
 
-        // MARK: - Test Support
         .target(
             name: "Manifests Test Support",
             dependencies: [
@@ -88,7 +74,6 @@ let package = Package(
             path: "Tests/Support"
         ),
 
-        // MARK: - Tests
         .testTarget(
             name: "Manifest Loader Tests",
             dependencies: [

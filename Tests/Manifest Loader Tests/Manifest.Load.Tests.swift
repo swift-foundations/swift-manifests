@@ -1,14 +1,3 @@
-// ===----------------------------------------------------------------------===//
-//
-// This source file is part of the swift-manifests open source project
-//
-// Copyright (c) 2026 Coen ten Thije Boonkkamp and the swift-manifests project authors
-// Licensed under Apache License v2.0
-//
-// See LICENSE for license information
-//
-// ===----------------------------------------------------------------------===//
-
 import File_System
 import Testing
 
@@ -22,26 +11,6 @@ extension Manifest {
 
 extension Manifest.Test.Integration {
 
-    /// End-to-end exercise of the auto-generated driver shim. Materializes
-    /// a real eval project on disk, spawns `swift run` against it, and
-    /// asserts the JSON-serialized `Output` round-trips through the
-    /// subprocess.
-    ///
-    /// Why: Swift 6.x rejects `@main` in a module that contains top-level
-    /// code; a file literally named `main.swift` is implicitly top-level
-    /// by filename. The shim emits `@main` on `enum __SwiftManifestDriver`,
-    /// so its filename MUST NOT be `main.swift`. Without this test the
-    /// failure mode is invisible until a downstream consumer hits the
-    /// shim path; a unit test on `Configuration` cannot catch it.
-    ///
-    /// Not run on Windows — a deliberate scoping, not a lost guard. The
-    /// constraint this test protects (the shim's filename) is
-    /// platform-independent and stays covered by every POSIX leg,
-    /// including the PR tier that gates merges. On Windows the test
-    /// would nest a full SwiftPM release build of swift-json and
-    /// swift-file-system inside a CI job that already spends ~30 of its
-    /// 45 minutes building, and its fixture discovery is POSIX-path
-    /// shaped (`#filePath` splitting on `/`, a `/tmp` fixture root).
     #if !os(Windows)
         @Test
         func `driver shim round-trips Int through swift run subprocess`() throws {
@@ -49,15 +18,6 @@ extension Manifest.Test.Integration {
             let manifestPackageRoot = Self._directoryAncestor(of: testFilePath, levels: 3)
             let foundationsRoot = Self._directoryAncestor(of: manifestPackageRoot, levels: 1)
 
-            // Resolve each dependency from SwiftPM's own checkouts first, falling
-            // back to a sibling working copy. The sibling layout alone — which is
-            // all this test used to consider — exists only on a developer machine
-            // that has cloned the whole ecosystem side by side. On CI the checkout
-            // is `/__w/swift-manifests/swift-manifests`, so `foundationsRoot` is
-            // `/__w/swift-manifests` and the sibling path is simply absent, which
-            // failed the run with `the package at '.../swift-json' cannot be
-            // accessed`. Both packages are declared dependencies of this one, so
-            // `.build/checkouts` always has them wherever the tests actually run.
             guard
                 let jsonPackagePath = Self._firstReadableDirectory([
                     manifestPackageRoot + "/.build/checkouts/swift-json",
@@ -68,10 +28,7 @@ extension Manifest.Test.Integration {
                     foundationsRoot + "/swift-file-system",
                 ])
             else {
-                // Deliberately a recorded failure, not a skip: this test guards a
-                // shim-filename constraint whose failure mode is otherwise
-                // invisible, and silently dropping it in the environment that gates
-                // merges is how the coverage would be lost without anyone noticing.
+
                 Issue.record(
                     """
                     Could not locate the swift-json / swift-file-system checkouts. \
@@ -83,10 +40,6 @@ extension Manifest.Test.Integration {
                 return
             }
 
-            // A random suffix rather than `getpid()`: the pid spelling needs a
-            // per-platform libc import (`Darwin`/`Glibc`/`CRT`), and the missing
-            // Windows branch made this file the one compile error on that leg.
-            // Uniqueness of the fixture directory is the only requirement.
             let fixtureRoot = "/tmp/swift-manifest-e2e-\(Swift.UInt64.random(in: .min ... .max))"
             try Manifest._createDirectoryRecursive(at: fixtureRoot)
 
@@ -120,12 +73,6 @@ extension Manifest.Test.Integration {
         }
     #endif
 
-    /// Returns the first candidate that names a directory whose contents can
-    /// actually be listed, or `nil` when none can.
-    ///
-    /// Listing rather than merely validating the path: `File.Directory(validating:)`
-    /// checks the spelling, not the filesystem, so a path that does not exist
-    /// validates fine and would be reported as usable.
     private static func _firstReadableDirectory(
         _ candidates: [Swift.String]
     ) -> Swift.String? {

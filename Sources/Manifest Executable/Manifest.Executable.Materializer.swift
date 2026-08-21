@@ -1,44 +1,15 @@
-// ===----------------------------------------------------------------------===//
-//
-// This source file is part of the swift-manifests open source project
-//
-// Copyright (c) 2026 Coen ten Thije Boonkkamp and the swift-manifests project authors
-// Licensed under Apache License v2.0
-//
-// See LICENSE for license information
-//
-// ===----------------------------------------------------------------------===//
-
 internal import File_System
 public import Manifest_Primitives
 internal import Package_Primitives
 internal import SPM_Standard
 
 extension Manifest.Executable {
-    /// Renders the eval project (`Package.swift` + `Sources/<executableName>/main.swift`)
-    /// for a consumer-manifest dispatch.
-    ///
-    /// Always overwrites; the eval project is fully derived from the
-    /// supplied ``Configuration`` plus the consumer's source bytes,
-    /// so re-rendering is idempotent.
+
     public enum Materializer {}
 }
 
 extension Manifest.Executable.Materializer {
-    /// Materialize the eval project on disk.
-    ///
-    /// Layout:
-    /// ```
-    /// <evalRoot>/
-    ///   Package.swift
-    ///   Sources/
-    ///     <executableName>/
-    ///       main.swift
-    /// ```
-    ///
-    /// `main.swift` is a verbatim copy of
-    /// ``Manifest/Executable/Configuration/consumerSourcePath``;
-    /// `Package.swift` is rendered from the Configuration.
+
     @usableFromInline
     internal static func materialize(
         configuration: Manifest.Executable.Configuration
@@ -66,16 +37,6 @@ extension Manifest.Executable.Materializer {
         try Self.writeAtomic(consumerSource, to: mainSwiftPath)
     }
 
-    /// Render the eval project's `Package.swift` source.
-    ///
-    /// Output shape:
-    /// 1. `// swift-tools-version: <toolsVersion>` directive
-    /// 2. `import PackageDescription`
-    /// 3. `let package = Package(...)` literal with `name`,
-    ///    `platforms`, `products`, `dependencies`, `targets`, and
-    ///    `swiftLanguageModes`
-    /// 4. Optional trailing `for target in package.targets ...`
-    ///    block applying ``Configuration/ecosystemSettings``
     @usableFromInline
     internal static func renderPackageSwift(
         configuration: Manifest.Executable.Configuration
@@ -174,14 +135,6 @@ extension Manifest.Executable.Materializer {
         return lines.joined(separator: "\n")
     }
 
-    /// Render a `.package(url:..., <requirement>)` PackageDescription
-    /// token from a typed `Package.Requirement`. Every variant maps
-    /// directly to a PackageDescription clause the eval `Package.swift`
-    /// can accept.
-    ///
-    /// Fileprivate per `[API-NAME-002]` — the helper's compound-shape
-    /// name is exempt from the no-compound-identifier rule at this
-    /// visibility scope.
     fileprivate static func render(
         url: Swift.String,
         requirement: Package.Requirement
@@ -210,8 +163,6 @@ extension Manifest.Executable.Materializer {
         }
     }
 
-    /// Render a `.package(id:..., <requirement>)` PackageDescription
-    /// token from a typed SE-0292 registry identity plus requirement.
     fileprivate static func render(
         registry identity: Package.Identity,
         requirement: Package.Requirement
@@ -234,20 +185,11 @@ extension Manifest.Executable.Materializer {
             return "        .package(id: \"\(id)\", exact: \"\(version)\"),"
 
         case .branch, .revision:
-            // Registry-form deps do not support branch/revision constraints —
-            // those clauses are URL-form only. The generated literal is left
-            // as a SwiftPM-parse-error placeholder so the misuse surfaces
-            // loudly at eval-project build time rather than silently
-            // emitting a wrong-but-valid token.
+
             return "        // ERROR: registry deps do not support branch/revision: \(id)"
         }
     }
 
-    /// Render a typed `Version.Range<Version.Semantic>` as a half-open
-    /// `"lower"..<"upper"` SwiftPM literal pair. SwiftPM accepts
-    /// inclusive-lower / exclusive-upper bounds only; other shapes
-    /// produce a clearly-malformed placeholder so SwiftPM's manifest
-    /// parser surfaces the error at eval time.
     fileprivate static func rangeLiteral(
         _ range: Version.Range<Version.Semantic>
     ) -> Swift.String {
@@ -259,16 +201,6 @@ extension Manifest.Executable.Materializer {
         return "\"\(lower)\"..<\"\(upper)\""
     }
 
-    /// Compute the relative prefix, such as `"../.."`, from
-    /// `evalRoot` up to `consumerPackageRoot`. Used to rewrite
-    /// consumer-relative `.package(path:)` declarations so they
-    /// resolve from the eval `Package.swift`'s vantage.
-    ///
-    /// Returns `"."` defensively when `evalRoot` is not a
-    /// descendant of `consumerPackageRoot` — the eval
-    /// `Package.swift` will fail to resolve `.package(path:)` deps
-    /// in that case, surfacing the configuration error at build
-    /// time.
     @usableFromInline
     internal static func relativePrefix(
         from evalRoot: File.Path,
@@ -287,20 +219,6 @@ extension Manifest.Executable.Materializer {
         return Swift.Array(repeating: "..", count: depth).joined(separator: "/")
     }
 
-    /// Resolve a consumer-supplied path-form dep into a path
-    /// relative to the eval `Package.swift`.
-    ///
-    /// `consumerPath` is the literal string the consumer wrote,
-    /// such as `"../../swift-foo"`, `"."`, or `""`; `root` is the
-    /// pre-computed relative prefix from
-    /// ``relativePrefix(from:to:)``. The result is the path string
-    /// the eval `Package.swift` will use.
-    ///
-    /// Self-reference shortcuts: `"."` and the empty string both
-    /// collapse to `root`, the consumer's own package root from the
-    /// eval's vantage. Naive concatenation (`"../.." + "/" + "."`)
-    /// would yield `"../../."` which SwiftPM's `.package(path:)`
-    /// parser rejects with "unknown package '.'".
     @usableFromInline
     internal static func resolve(
         _ consumerPath: Swift.String,
@@ -322,11 +240,7 @@ extension Manifest.Executable.Materializer {
         }
         let joined: Swift.String = base.appending(consumer).string
         #if os(Windows)
-            // The result is rendered into a Swift string literal inside the
-            // eval `Package.swift`, where a backslash is an escape character,
-            // and SwiftPM's `.package(path:)` accepts forward slashes on
-            // every platform. `File.Path.string` uses the native separator,
-            // so re-render it in the manifest's portable spelling.
+
             return Swift.String(joined.map { $0 == "\\" ? "/" : $0 })
         #else
             return joined

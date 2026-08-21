@@ -1,14 +1,3 @@
-// ===----------------------------------------------------------------------===//
-//
-// This source file is part of the swift-manifests open source project
-//
-// Copyright (c) 2026 Coen ten Thije Boonkkamp and the swift-manifests project authors
-// Licensed under Apache License v2.0
-//
-// See LICENSE for license information
-//
-// ===----------------------------------------------------------------------===//
-
 import File_System
 import Testing
 import URI_Standard
@@ -21,16 +10,10 @@ struct `Manifest.Resolver Tests` {
     @Suite struct `Edge Case` {}
     @Suite struct Integration {}
 
-    /// A minimal `C` shape for testing the resolver's fold semantics
-    /// without depending on a real lint configuration type.
     struct Configuration: Sendable, Equatable {
         let value: Swift.Int
     }
 
-    /// Renders `path` as a `file://` URI string. On Windows the native
-    /// spelling is `C:\...`; RFC 8089 requires forward slashes and a
-    /// slash before the drive letter (`file:///C:/...`). Elsewhere the
-    /// native spelling is already the URI path.
     static func fileURIString(of path: File.Path) -> Swift.String {
         #if os(Windows)
             var uriPath = Swift.String(path.description.map { $0 == "\\" ? "/" : $0 })
@@ -61,8 +44,6 @@ extension `Manifest.Resolver Tests`.Unit {
     }
 }
 
-// MARK: - fetch() — file:// scheme
-
 extension `Manifest.Resolver Tests`.Integration {
     @Test
     func `fetch reads file:// URI content from an existing file`() throws {
@@ -72,8 +53,7 @@ extension `Manifest.Resolver Tests`.Integration {
             suffix: ".txt"
         )
         defer {
-            // swift-linter:disable:next try optional
-            // REASON: File.System.Delete.delete(at:) failure here is best-effort cleanup.
+
             try? File.System.Delete.delete(at: path)
         }
         let content = "// parent: file:///nowhere\nlet manifest: Int = 42\n"
@@ -96,8 +76,7 @@ extension `Manifest.Resolver Tests`.Integration {
             suffix: ".txt"
         )
         defer {
-            // swift-linter:disable:next try optional
-            // REASON: File.System.Delete.delete(at:) failure here is best-effort cleanup.
+
             try? File.System.Delete.delete(at: path)
         }
         let content = "let manifest: Int = 7\n"
@@ -106,7 +85,6 @@ extension `Manifest.Resolver Tests`.Integration {
         let uri = try URI(`Manifest.Resolver Tests`.fileURIString(of: path))
         var memo: [URI: Swift.String] = [:]
 
-        // First fetch — populates memo.
         let first = try Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>.fetch(
             uri,
             memo: &memo
@@ -115,12 +93,9 @@ extension `Manifest.Resolver Tests`.Integration {
         #expect(memo[uri] == content)
         #expect(memo.count == 1)
 
-        // Mutate the file on disk; a non-memoized re-read would observe
-        // the new bytes.
         let mutated = "let manifest: Int = 99\n"
         try File(path).write.atomic(mutated)
 
-        // Second fetch — must return memoized content, NOT the new bytes.
         let second = try Manifest.Resolver<Swift.Int, `Manifest.Resolver Tests`.Configuration>
             .fetch(uri, memo: &memo)
         #expect(second == content)
@@ -136,7 +111,7 @@ extension `Manifest.Resolver Tests`.`Edge Case` {
             key: "fetchThrowsForMissingFile-DOES-NOT-EXIST",
             suffix: ".txt"
         )
-        // Best-effort cleanup in case a prior test run left a stray.
+
         do throws(File.System.Delete.Error) {
             try File.System.Delete.delete(at: path)
         } catch {}

@@ -1,14 +1,3 @@
-// ===----------------------------------------------------------------------===//
-//
-// This source file is part of the swift-manifests open source project
-//
-// Copyright (c) 2026 Coen ten Thije Boonkkamp and the swift-manifests project authors
-// Licensed under Apache License v2.0
-//
-// See LICENSE for license information
-//
-// ===----------------------------------------------------------------------===//
-
 internal import Environment
 internal import File_System
 public import JSON
@@ -17,41 +6,18 @@ internal import Process
 internal import Strings
 
 extension Manifest {
-    /// Compile and run a Swift-DSL manifest, returning the
-    /// declared typed value as `Output`.
-    ///
-    /// Materializes a temporary eval project at
-    /// `\(root)/.swift-manifest/\(filename)/` containing a
-    /// generated `Package.swift`, a generated driver `Driver.swift`,
-    /// and a copy of the consumer's manifest file. Invokes
-    /// `swift run --package-path <eval>` via ``Process/Spawn`` and
-    /// captures the JSON-serialized typed value from a known output
-    /// path.
-    ///
-    /// Manifest contract: the consumer's file MUST declare a
-    /// file-scope `let \(binding): Output` whose right-hand side
-    /// is a fully-formed `Output` value.
-    ///
-    /// - Parameters:
-    ///   - output: the typed-value type. Constraint:
-    ///     ``JSON.Serializable``.
-    ///   - configuration: ``Configuration`` describing manifest
-    ///     location, target value name, and dependencies.
-    /// - Returns: the typed value declared in the manifest.
-    /// - Throws: ``Manifest/Error`` on materialization, driver,
-    ///   or decoding failure.
+
     public static func load<Output: JSON.Serializable>(
         _ output: Output.Type,
         configuration: Configuration
     ) throws(Self.Error) -> Output {
-        // 1. Validate inputs (existence + path-conversion fitness).
+
         let evalRoot =
             configuration.root
             + "/.swift-manifest/" + configuration.filename
         let outputPath = evalRoot + "/.output.json"
         let manifestSourcePath = configuration.root + "/" + configuration.filename
 
-        // 2. Materialize the eval project on disk.
         try _materialize(
             evalRoot: evalRoot,
             outputPath: outputPath,
@@ -59,13 +25,10 @@ extension Manifest {
             configuration: configuration
         )
 
-        // 3. Spawn the driver subprocess.
         try _runDriver(evalRoot: evalRoot, outputPath: outputPath, configuration: configuration)
 
-        // 4. Read captured output.
         let captured: Swift.String = try _readCapturedOutput(at: outputPath)
 
-        // 5. Decode JSON into Output.
         do throws(JSON.Error) {
             let json = try JSON.parse(captured)
             return try Output(json: json)
@@ -74,7 +37,6 @@ extension Manifest {
         }
     }
 
-    /// Convenience overload aggregating individual parameters.
     public static func load<Output: JSON.Serializable>(
         _ output: Output.Type,
         from root: Swift.String,
@@ -96,8 +58,6 @@ extension Manifest {
     }
 }
 
-// MARK: - Materialization
-
 extension Manifest {
     @usableFromInline
     internal static func _materialize(
@@ -108,29 +68,20 @@ extension Manifest {
     ) throws(Self.Error) {
         let driverDir = evalRoot + "/Sources/Driver"
 
-        // Create directory tree.
         try _createDirectoryRecursive(at: driverDir)
 
-        // Generate Package.swift.
         let packageSwift = _renderPackageSwift(
             evalRoot: evalRoot,
             configuration: configuration
         )
         try _writeAtomic(packageSwift, to: evalRoot + "/Package.swift")
 
-        // Generate driver Driver.swift.
-        //
-        // The shim uses `@main` on `enum __SwiftManifestDriver`. Swift 6.x
-        // rejects `@main` in a module that contains top-level code; a file
-        // literally named `main.swift` is implicitly top-level by filename.
-        // Writing the shim to `Driver.swift` keeps `@main` valid.
         let driverSwift = _renderDriverMain(
             binding: configuration.binding,
             imports: configuration.dependencies.flatMap(\.imports)
         )
         try _writeAtomic(driverSwift, to: driverDir + "/Driver.swift")
 
-        // Copy the consumer's manifest into the driver target.
         let manifestBytes: Swift.String = try _readEntireFile(at: manifestSourcePath)
         try _writeAtomic(manifestBytes, to: driverDir + "/" + configuration.filename)
     }
@@ -209,8 +160,6 @@ extension Manifest {
         try _readEntireFile(at: absolutePath)
     }
 }
-
-// MARK: - Source Rendering
 
 extension Manifest {
     @usableFromInline
@@ -294,8 +243,6 @@ extension Manifest {
         return lines.joined(separator: "\n")
     }
 }
-
-// MARK: - Driver Spawn
 
 extension Manifest {
     @usableFromInline

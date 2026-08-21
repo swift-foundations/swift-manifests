@@ -1,14 +1,3 @@
-// ===----------------------------------------------------------------------===//
-//
-// This source file is part of the swift-manifests open source project
-//
-// Copyright (c) 2026 Coen ten Thije Boonkkamp and the swift-manifests project authors
-// Licensed under Apache License v2.0
-//
-// See LICENSE for license information
-//
-// ===----------------------------------------------------------------------===//
-
 internal import File_System
 public import JSON
 internal import Manifest_Loader
@@ -17,52 +6,12 @@ internal import Process
 internal import URI_Standard
 
 extension Manifest {
-    /// Resolves a manifest's configuration by walking its parent
-    /// chain.
-    ///
-    /// `Manifest.Resolver` is generic over the manifest type `M`
-    /// (which `Manifest_Loader` deserializes from each parent's
-    /// captured JSON) and the configuration type `C` (the runtime
-    /// shape the consumer composes via `buildConfiguration`).
-    ///
-    /// The resolver:
-    /// 1. Loads the consumer's manifest via ``Manifest_Loader/Manifest/load(_:configuration:)``.
-    /// 2. Scans the manifest's source file for a leading
-    ///    `// parent: <URL>` directive via
-    ///    ``Manifest_Primitives/Manifest/Parent/scan(in:)``.
-    /// 3. Walks the chain (cycle-tracked, depth-capped, per-process
-    ///    fetch-memoized).
-    /// 4. Folds parent manifests parent-first into a layered `C`,
-    ///    then layers the consumer's manifest on top via
-    ///    `buildConfiguration`.
-    ///
-    /// Failures are partitioned:
-    /// - Consumer manifest absent / load failure → silently returns
-    ///   `defaultConfiguration()`.
-    /// - No parent directive → returns
-    ///   `buildConfiguration(consumerManifest, nil)`.
-    /// - Parent chain failure (fetch, cycle, depth, eval) → throws
-    ///   ``Manifest/Resolver/Error``; the caller decides whether to
-    ///   warn + fall back to consumer-only or to default.
+
     public enum Resolver<M: JSON.Serializable, C>: Swift.Sendable {}
 }
 
 extension Manifest.Resolver {
-    /// Walk the parent chain expressed in `consumerSource` and return
-    /// the parent manifests in parent-first (root-most first) order.
-    ///
-    /// Unlike ``resolve(consumerPackageRoot:filename:dependencies:defaultConfiguration:buildConfiguration:)``,
-    /// this method does NOT evaluate a consumer manifest — it only
-    /// walks the parent chain expressed by `// parent: <URL>`
-    /// directives in `consumerSource`. Use when the consumer's
-    /// configuration is produced by some other mechanism, such as a
-    /// Shape γ executable `Lint.swift` whose rule activations are
-    /// real Swift witness references, but whose inherited rule set
-    /// is still a wire-format `Lint.Manifest` chain).
-    ///
-    /// Returns an empty array when `consumerSource` contains no
-    /// recognized parent directive. Throws on chain failure (cycle,
-    /// depth, fetch, eval).
+
     public static func walkParents(
         from consumerSource: Swift.String,
         filename: Swift.String,
@@ -78,30 +27,6 @@ extension Manifest.Resolver {
         )
     }
 
-    /// Resolve the configuration for `consumerPackageRoot`.
-    ///
-    /// - Parameters:
-    ///   - consumerPackageRoot: filesystem path to the package whose
-    ///     manifest is being resolved.
-    ///   - filename: the manifest's filename inside that
-    ///     package root, such as `"Lint.swift"`.
-    ///   - dependencies: the SwiftPM dependencies the manifest's
-    ///     driver shim compiles against (passed verbatim to
-    ///     ``Manifest_Loader/Manifest/load(_:configuration:)`` for
-    ///     both consumer and parent evaluations).
-    ///   - defaultConfiguration: the fallback when the consumer's
-    ///     manifest is absent or fails to load.
-    ///   - buildConfiguration: lifts a loaded `M` plus the
-    ///     accumulated parent `C?` into the next layered `C`. Called
-    ///     once per parent layer (parent-first), then once with the
-    ///     consumer's manifest at the end.
-    ///
-    /// - Returns: a `C` constructed by folding the parent chain
-    ///   parent-first then layering the consumer on top. When no
-    ///   parent directive is present the result is
-    ///   `buildConfiguration(consumerManifest, nil)`.
-    ///
-    /// - Throws: ``Manifest/Resolver/Error`` on parent-chain failure.
     public static func resolve(
         consumerPackageRoot: Swift.String,
         filename: Swift.String,
@@ -109,7 +34,7 @@ extension Manifest.Resolver {
         defaultConfiguration: () -> C,
         buildConfiguration: (M, C?) -> C
     ) throws(Manifest.Resolver<M, C>.Error) -> C {
-        // Step 1: load consumer manifest. Silent fall-back to defaults on any failure.
+
         let consumerManifest: M
         do throws(Manifest.Error) {
             consumerManifest = try Manifest.load(
@@ -123,14 +48,10 @@ extension Manifest.Resolver {
             return defaultConfiguration()
         }
 
-        // Step 2: scan the consumer's source for `// parent: <URL>`. Best-effort
-        // read; absence of the source file is indistinguishable from absence of
-        // a directive — both produce single-tier results.
         let consumerSource = readSource(
             at: consumerPackageRoot + "/" + filename
         )
 
-        // Step 3: try to extract a parent URI from the source.
         guard
             let consumerSource,
             let firstParentURI = parseParent(in: consumerSource)
@@ -138,14 +59,12 @@ extension Manifest.Resolver {
             return buildConfiguration(consumerManifest, nil)
         }
 
-        // Step 4: walk the chain. Throws on cycle / depth / fetch / eval failure.
         let parentChain = try walk(
             startingAt: firstParentURI,
             filename: filename,
             dependencies: dependencies
         )
 
-        // Step 5: fold parents (parent-first), layer consumer on top.
         var current: C? = nil
         for parentManifest in parentChain {
             current = buildConfiguration(parentManifest, current)
@@ -154,13 +73,8 @@ extension Manifest.Resolver {
     }
 }
 
-// MARK: - Source reading
-
 extension Manifest.Resolver {
-    /// Read a manifest source file's bytes as a UTF-8 string.
-    ///
-    /// Returns `nil` on any I/O failure — the caller treats absent
-    /// content the same as absent parent directive.
+
     @inline(__always)
     private static func readSource(at path: Swift.String) -> Swift.String? {
         do {
@@ -178,10 +92,6 @@ extension Manifest.Resolver {
         }
     }
 
-    /// Parse the first `// parent: <URL>` directive from `source`
-    /// and convert the URL bytes to a typed `URI`. Validates the
-    /// scheme prefix — only `http://`, `https://`, and `file://`
-    /// are accepted.
     @inline(__always)
     private static func parseParent(
         in source: Swift.String
@@ -204,26 +114,12 @@ extension Manifest.Resolver {
 
 }
 
-// File-scope so the constants compile inside a generic extension —
-// Swift forbids static stored properties on generic types.
 private let schemePrefixHTTP: [Swift.UInt8] = Swift.Array("http://".utf8)
 private let schemePrefixHTTPS: [Swift.UInt8] = Swift.Array("https://".utf8)
 private let schemePrefixFile: [Swift.UInt8] = Swift.Array("file://".utf8)
 
-// MARK: - Chain walk
-
 extension Manifest.Resolver {
-    /// Walk the parent chain starting at `rootURL`.
-    ///
-    /// Returns the chain in PARENT-FIRST order (root-most → tier
-    /// closest to consumer). The consumer's own manifest is NOT
-    /// part of this chain — the caller layers it on top.
-    ///
-    /// Cycle detection: visited URIs accumulate in a `Set<URI>` plus
-    /// an order-preserving `[URI]` for diagnostics; revisit produces
-    /// ``Manifest/Resolver/Error/parentChainCycle(visited:at:)``.
-    /// Depth backstop at 16 produces
-    /// ``Manifest/Resolver/Error/parentChainTooDeep(depth:)``.
+
     @inline(__always)
     internal static func walk(
         startingAt rootURL: URI,
@@ -255,7 +151,7 @@ extension Manifest.Resolver {
                 dependencies: dependencies
             )
             chain.append(parentManifest)
-            // Re-parse the same content for the next parent URI.
+
             if let nextBytes = Manifest.Parent.scan(in: content),
                 nextBytes.starts(with: schemePrefixHTTP)
                     || nextBytes.starts(with: schemePrefixHTTPS)
@@ -277,21 +173,8 @@ extension Manifest.Resolver {
     }
 }
 
-// MARK: - URL fetch
-
 extension Manifest.Resolver {
-    /// Fetch the contents of a parent `URI`, memoizing within the
-    /// passed-through dictionary.
-    ///
-    /// Two backends:
-    /// - `file://<path>` — read the local file directly via
-    ///   `File_System` using the URI's typed `path` accessor.
-    /// - `http://`, `https://` — invoke `curl -fsSL <uri.value> -o
-    ///   <temp>` via ``Process/Spawn/run(_:)``; read the temp file;
-    ///   delete it.
-    ///
-    /// Memoization is per-process and keyed on the `URI`. Same URI
-    /// fetched twice in one chain resolution = one curl invocation.
+
     @inline(__always)
     internal static func fetch(
         _ uri: URI,
@@ -310,8 +193,6 @@ extension Manifest.Resolver {
         return content
     }
 
-    /// Read a `file://`-scheme `URI` by routing through the URI's
-    /// typed `path` accessor (no manual scheme manipulation).
     @inline(__always)
     private static func fetchFile(
         _ uri: URI
@@ -326,8 +207,7 @@ extension Manifest.Resolver {
         let pathString: Swift.String
         if uriPath.isAbsolute {
             #if os(Windows)
-                // RFC 8089: in `file:///C:/...` the slash before the drive
-                // letter is URI syntax, not part of the Windows-native path.
+
                 if let first = uriPath.segments.first,
                     first.count == 2,
                     first.hasSuffix(":")
@@ -357,9 +237,6 @@ extension Manifest.Resolver {
         }
     }
 
-    /// Fetch an `http://` or `https://` `URI` by spawning
-    /// `curl -fsSL <uri.value> -o <temp>`, reading the temp file,
-    /// then deleting it.
     @inline(__always)
     private static func fetchHTTP(
         _ uri: URI
@@ -427,7 +304,6 @@ extension Manifest.Resolver {
             )
         }
 
-        // Best-effort cleanup; ignore errors.
         do throws(Process.Error) {
             _ = try Process.Spawn.run(
                 Process.Spawn.Configuration(
@@ -436,24 +312,15 @@ extension Manifest.Resolver {
                 )
             )
         } catch {
-            // Best-effort cleanup; ignore failures.
+
         }
 
         return content
     }
 }
 
-// MARK: - Parent eval
-
 extension Manifest.Resolver {
-    /// Evaluate a fetched parent's manifest content as a typed `M`
-    /// via ``Manifest_Loader/Manifest/load(_:configuration:)``.
-    ///
-    /// Materializes the content under
-    /// `/tmp/swift-manifests-parent-eval-<sanitized-uri>/<filename>`,
-    /// then invokes `Manifest.load` against that as a fresh package
-    /// root. Each parent eval is a swift-build subprocess; only the
-    /// FETCH step is memoized.
+
     @inline(__always)
     internal static func evalParent(
         content: Swift.String,
@@ -478,7 +345,6 @@ extension Manifest.Resolver {
         let tempDirectoryString = tempDirectory.description
         let tempFilePathString = tempDirectoryString + "/" + filename
 
-        // Best-effort mkdir -p; failure surfaces as the subsequent write failure.
         do throws(Process.Error) {
             _ = try Process.Spawn.run(
                 Process.Spawn.Configuration(
@@ -487,7 +353,7 @@ extension Manifest.Resolver {
                 )
             )
         } catch {
-            // Best-effort; failure surfaces as the subsequent write failure.
+
         }
 
         do {

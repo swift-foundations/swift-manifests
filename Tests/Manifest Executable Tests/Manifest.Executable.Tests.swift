@@ -1,14 +1,3 @@
-// ===----------------------------------------------------------------------===//
-//
-// This source file is part of the swift-manifests open source project
-//
-// Copyright (c) 2026 Coen ten Thije Boonkkamp and the swift-manifests project authors
-// Licensed under Apache License v2.0
-//
-// See LICENSE for license information
-//
-// ===----------------------------------------------------------------------===//
-
 import SPM_Standard
 import Testing
 
@@ -21,8 +10,6 @@ extension Manifest.Executable {
         @Suite struct `Render Package Swift` {}
     }
 }
-
-// MARK: - relativePrefix
 
 extension Manifest.Executable.Test.`Relative Prefix` {
     @Test
@@ -58,8 +45,6 @@ extension Manifest.Executable.Test.`Relative Prefix` {
     }
 }
 
-// MARK: - resolve
-
 extension Manifest.Executable.Test.Resolve {
     @Test
     func `dot self-reference returns root prefix verbatim`() throws {
@@ -89,8 +74,6 @@ extension Manifest.Executable.Test.Resolve {
     }
 }
 
-// MARK: - renderPackageSwift
-
 extension Manifest.Executable.Test.`Render Package Swift` {
     @Test
     func `minimal Configuration emits well-formed Package_swift`() throws {
@@ -114,10 +97,7 @@ extension Manifest.Executable.Test.`Render Package Swift` {
         let rendered: Swift.String = try Manifest.Executable.Materializer.renderPackageSwift(
             configuration: configuration
         )
-        // Consumer-supplied `"../../swift-primitives-linter-rules"` with
-        // eval-relative-to-consumer prefix `"../.."` resolves to
-        // `"../../../../swift-primitives-linter-rules"` from the eval
-        // Package.swift's vantage.
+
         #expect(rendered.contains(".package(path: \"../../../../swift-primitives-linter-rules\")"))
     }
 
@@ -235,10 +215,7 @@ extension Manifest.Executable.Test.`Render Package Swift` {
 }
 
 extension Manifest.Executable.Test.`Render Package Swift` {
-    /// Lint-shaped fixture Configuration: consumer at `/tmp/swift-foo`,
-    /// eval at `/tmp/swift-foo/.swift-lint/eval`, one path-form dep
-    /// matching the consumer-side `"../../swift-primitives-linter-rules"`
-    /// shape commonly found in Lint.swift dispatches.
+
     fileprivate static func makeFixtureConfiguration() throws -> Manifest.Executable.Configuration {
         Manifest.Executable.Configuration(
             consumerPackageRoot: try File.Path("/tmp/swift-foo"),
