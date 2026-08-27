@@ -73,7 +73,7 @@ into a layered configuration via the consumer-supplied
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/swift-foundations/swift-manifests.git", branch: "main"),
+    .package(url: "https://github.com/swift-compositions/swift-manifests.git", branch: "main"),
 ]
 ```
 

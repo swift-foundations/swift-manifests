@@ -1,6 +1,6 @@
 public import File_System
-public import Manifest_Primitives
-public import Package_Primitives
+public import Manifest
+public import Package
 public import SPM_Standard
 
 extension Manifest.Executable {

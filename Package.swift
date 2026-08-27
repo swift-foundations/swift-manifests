@@ -18,22 +18,22 @@ let package = Package(
         .library(name: "Manifests Test Support", targets: ["Manifests Test Support"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-primitives/swift-manifest-primitives.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-package-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-molecules/swift-manifest.git", branch: "main"),
+        .package(url: "https://github.com/swift-molecules/swift-package.git", branch: "main"),
         .package(url: "https://github.com/swift-standards/swift-spm-standard.git", branch: "main"),
         .package(url: "https://github.com/swift-standards/swift-uri-standard.git", branch: "main"),
-        .package(url: "https://github.com/swift-foundations/swift-environment.git", branch: "main"),
-        .package(url: "https://github.com/swift-foundations/swift-file-system.git", branch: "main"),
-        .package(url: "https://github.com/swift-foundations/swift-json.git", branch: "main"),
-        .package(url: "https://github.com/swift-foundations/swift-process.git", branch: "main"),
-        .package(url: "https://github.com/swift-foundations/swift-strings.git", branch: "main"),
+        .package(url: "https://github.com/swift-compositions/swift-environment.git", branch: "main"),
+        .package(url: "https://github.com/swift-compositions/swift-file-system.git", branch: "main"),
+        .package(url: "https://github.com/swift-compositions/swift-json.git", branch: "main"),
+        .package(url: "https://github.com/swift-compositions/swift-process.git", branch: "main"),
+        .package(url: "https://github.com/swift-compositions/swift-strings.git", branch: "main"),
     ],
     targets: [
 
         .target(
             name: "Manifest Loader",
             dependencies: [
-                .product(name: "Manifest Primitives", package: "swift-manifest-primitives"),
+                .product(name: "Manifest", package: "swift-manifest"),
                 .product(name: "Environment", package: "swift-environment"),
                 .product(name: "File System", package: "swift-file-system"),
                 .product(name: "JSON", package: "swift-json"),
@@ -45,7 +45,7 @@ let package = Package(
         .target(
             name: "Manifest Resolver",
             dependencies: [
-                .product(name: "Manifest Primitives", package: "swift-manifest-primitives"),
+                .product(name: "Manifest", package: "swift-manifest"),
                 "Manifest Loader",
                 .product(name: "File System", package: "swift-file-system"),
                 .product(name: "Process", package: "swift-process"),
@@ -56,8 +56,8 @@ let package = Package(
         .target(
             name: "Manifest Executable",
             dependencies: [
-                .product(name: "Manifest Primitives", package: "swift-manifest-primitives"),
-                .product(name: "Package Primitives", package: "swift-package-primitives"),
+                .product(name: "Manifest", package: "swift-manifest"),
+                .product(name: "Package", package: "swift-package"),
                 .product(name: "SPM Standard", package: "swift-spm-standard"),
                 .product(name: "File System", package: "swift-file-system"),
                 .product(name: "Process", package: "swift-process"),
@@ -69,7 +69,7 @@ let package = Package(
             dependencies: [
                 "Manifest Loader",
                 "Manifest Resolver",
-                .product(name: "Manifest Primitives Test Support", package: "swift-manifest-primitives"),
+                .product(name: "Manifest Test Support", package: "swift-manifest"),
             ],
             path: "Tests/Support"
         ),

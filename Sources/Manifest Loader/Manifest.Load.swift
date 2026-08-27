@@ -1,7 +1,7 @@
 internal import Environment
 internal import File_System
 public import JSON
-public import Manifest_Primitives
+public import Manifest
 internal import Process
 internal import Strings
 

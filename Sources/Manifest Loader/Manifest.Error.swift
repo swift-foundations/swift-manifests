@@ -1,5 +1,5 @@
 public import JSON
-public import Manifest_Primitives
+public import Manifest
 public import Process
 
 extension Manifest {

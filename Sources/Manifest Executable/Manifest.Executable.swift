@@ -1,5 +1,5 @@
 internal import File_System
-public import Manifest_Primitives
+public import Manifest
 internal import Process
 
 extension Manifest {

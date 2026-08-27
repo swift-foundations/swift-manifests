@@ -1,5 +1,5 @@
 public import File_System
-public import Manifest_Primitives
+public import Manifest
 
 extension Manifest.Executable {
 
